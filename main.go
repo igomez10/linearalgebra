@@ -27,7 +27,7 @@ func IsRowEchelonForm(matrix [][]float64) bool {
 func allZeroRowsAreAtBottom(matrix [][]float64) bool {
 	foundRowsOfOnly0s := false
 	for _, row := range matrix {
-		rowIsOnly0 := true
+		rowIsOnly0s := true
 		for _, entry := range row {
 			if entry != 0 {
 
@@ -35,11 +35,11 @@ func allZeroRowsAreAtBottom(matrix [][]float64) bool {
 					return false
 				}
 
-				rowIsOnly0 = false
+				rowIsOnly0s = false
 			}
 		}
 
-		if rowIsOnly0 {
+		if rowIsOnly0s {
 			foundRowsOfOnly0s = true
 		}
 	}
