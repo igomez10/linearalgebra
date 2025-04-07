@@ -1,8 +1,27 @@
 package linearalgebra
 
+import "sort"
+
 // TODO
 // ToRowEchelonForm returns a new matrix in row echelon form using Gaussian elimination
 // Implement a compiler for matrix manipulation commands
+func SwapRows0sToBottom(matrix [][]float64) [][]float64 {
+	sort.Slice(matrix, func(i, j int) bool {
+		for x := range matrix[i] {
+			if matrix[i][x] == 0 && matrix[j][x] == 0 {
+				continue
+			}
+
+			if matrix[i][x] != 0 && matrix[j][x] == 0 {
+				return true
+			}
+		}
+
+		return false
+	})
+
+	return matrix
+}
 
 func SwapRows(matrix [][]float64, i, j int) [][]float64 {
 	if i > len(matrix) || j > len(matrix) || i < 0 || j < 0 {

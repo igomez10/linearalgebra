@@ -870,3 +870,99 @@ func TestAddRowToRow(t *testing.T) {
 		})
 	}
 }
+
+func TestSwapRows0sToBottom(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "swap_rows",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{1, 2, 3},
+				}},
+			want: [][]float64{
+				{1, 2, 3},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "do_nothing",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{0, 0, 0},
+				}},
+			want: [][]float64{
+				{1, 2, 3},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "do_nothing_all_0s",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+				}},
+			want: [][]float64{
+				{0, 0, 0},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "swap_last_column_is_not_0",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{0, 0, 1},
+				}},
+			want: [][]float64{
+				{0, 0, 1},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "do_nothing_non_0s",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				}},
+			want: [][]float64{
+				{1, 2, 3},
+				{4, 5, 6},
+				{7, 8, 9},
+			},
+		},
+		{
+			name: "swap_first_row_is_0s",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{4, 5, 6},
+					{7, 8, 9},
+				}},
+			want: [][]float64{
+				{4, 5, 6},
+				{7, 8, 9},
+				{0, 0, 0},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := SwapRows0sToBottom(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SwapRows0sToBottom() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
