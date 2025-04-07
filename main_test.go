@@ -1,6 +1,7 @@
 package linearalgebra
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -585,6 +586,286 @@ func TestGetPivotEntries(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GetPivotEntries(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetPivotEntries() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSwapRows(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+		i      int
+		j      int
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "should_pass",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				i: 0,
+				j: 2,
+			},
+			want: [][]float64{
+				{7, 8, 9},
+				{4, 5, 6},
+				{1, 2, 3},
+			},
+		},
+		{
+			name: "should_pass_changing_nothing",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				i: 1,
+				j: 1,
+			},
+			want: [][]float64{
+				{1, 2, 3},
+				{4, 5, 6},
+				{7, 8, 9},
+			},
+		},
+		{
+			name: "should_pass_changing_first_second",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				i: 0,
+				j: 1,
+			},
+			want: [][]float64{
+				{4, 5, 6},
+				{1, 2, 3},
+				{7, 8, 9},
+			},
+		},
+		{
+			name: "should_pass_changing_second_first",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				i: 1,
+				j: 0,
+			},
+			want: [][]float64{
+				{4, 5, 6},
+				{1, 2, 3},
+				{7, 8, 9},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := SwapRows(tt.args.matrix, tt.args.i, tt.args.j); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SwapRows() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMultiplyScalarByRow(t *testing.T) {
+	type args struct {
+		matrix   [][]float64
+		rowIndex int
+		scalar   float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "should_pass_vector",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+				},
+				rowIndex: 0,
+				scalar:   2,
+			},
+			want: [][]float64{
+				{2, 4, 6},
+			},
+		},
+		{
+			name: "should_pass_matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{2, 4, 6},
+					{7, 8, 9},
+				},
+				rowIndex: 1,
+				scalar:   2,
+			},
+			want: [][]float64{
+				{1, 2, 3},
+				{4, 8, 12},
+				{7, 8, 9},
+			},
+		},
+		{
+			name: "should_pass_multiply_by_1",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				rowIndex: 1,
+				scalar:   1,
+			},
+			want: [][]float64{
+				{1, 2, 3},
+				{4, 5, 6},
+				{7, 8, 9},
+			},
+		},
+		{
+			name: "should_pass_division_vector",
+			args: args{
+				matrix: [][]float64{
+					{4, 8, 12},
+				},
+				rowIndex: 0,
+				scalar:   0.5,
+			},
+			want: [][]float64{
+				{2, 4, 6},
+			},
+		},
+		{
+			name: "should_pass_division_matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				rowIndex: 1,
+				scalar:   0.5,
+			},
+			want: [][]float64{
+				{1, 2, 3},
+				{2, 2.5, 3},
+				{7, 8, 9},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MultiplyScalarByRow(tt.args.matrix, tt.args.rowIndex, tt.args.scalar); !reflect.DeepEqual(got, tt.want) {
+				fmt.Println("got:")
+				for i := range got {
+					fmt.Printf("%f ", got[i])
+				}
+				fmt.Println()
+
+				fmt.Println("want:")
+				for i := range got {
+					fmt.Printf("%f ", tt.want[i])
+				}
+				fmt.Println()
+				t.Fatalf("unexpected got want")
+			}
+		})
+	}
+}
+
+func TestAddRowToRow(t *testing.T) {
+	type args struct {
+		matrix   [][]float64
+		rowToAdd []float64
+		rowIndex int
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "should_pass_add_0",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+				},
+				rowToAdd: []float64{0, 0, 0},
+				rowIndex: 0,
+			},
+			want: [][]float64{{1, 2, 3}},
+		},
+		{
+			name: "should_pass_add_row_1s",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+				},
+				rowToAdd: []float64{1, 1, 1},
+				rowIndex: 0,
+			},
+			want: [][]float64{{2, 3, 4}},
+		},
+		{
+			name: "should_pass_add_negative",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+				},
+				rowToAdd: []float64{-1, -1, -1},
+				rowIndex: 0,
+			},
+			want: [][]float64{{0, 1, 2}},
+		},
+		{
+			name: "should_pass_add_floats",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+				},
+				rowToAdd: []float64{0.5, 0.5, 0.5},
+				rowIndex: 0,
+			},
+			want: [][]float64{{1.5, 2.5, 3.5}},
+		},
+		{
+			name: "should_pass_add_to_matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				rowToAdd: []float64{1, 2, 3},
+				rowIndex: 1,
+			},
+			want: [][]float64{
+				{1, 2, 3},
+				{5, 7, 9},
+				{7, 8, 9},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AddRowToRow(tt.args.matrix, tt.args.rowToAdd, tt.args.rowIndex); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AddRowToRow() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -1,9 +1,44 @@
 package linearalgebra
 
 // TODO
-// GetPivot entries
 // ToRowEchelonForm returns a new matrix in row echelon form using Gaussian elimination
 // Implement a compiler for matrix manipulation commands
+
+func SwapRows(matrix [][]float64, i, j int) [][]float64 {
+	if i > len(matrix) || j > len(matrix) || i < 0 || j < 0 {
+		panic("invalid change")
+	}
+
+	tmp := matrix[i]
+	matrix[i] = matrix[j]
+	matrix[j] = tmp
+
+	return matrix
+}
+
+func MultiplyScalarByRow(matrix [][]float64, rowIndex int, scalar float64) [][]float64 {
+	if rowIndex < 0 || rowIndex >= len(matrix) {
+		panic("invalid change")
+	}
+
+	for i := range matrix[rowIndex] {
+		matrix[rowIndex][i] *= scalar
+	}
+
+	return matrix
+}
+
+func AddRowToRow(matrix [][]float64, rowToAdd []float64, rowIndex int) [][]float64 {
+	if rowIndex < 0 || rowIndex >= len(matrix) || len(matrix[0]) != len(rowToAdd) {
+		panic("invalid change")
+	}
+
+	for i := range matrix[rowIndex] {
+		matrix[rowIndex][i] += rowToAdd[i]
+	}
+
+	return matrix
+}
 
 // GetPivotEntries return the list of indexes where the pivot entries are located
 func GetPivotEntries(matrix [][]float64) [][]int {
