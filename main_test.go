@@ -257,3 +257,247 @@ func Test_allPivotEntriesAreRightOfPivotbove(t *testing.T) {
 		})
 	}
 }
+
+func Test_allPivotsEqualTo1(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "should be true",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "should be false pivot is 2",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 2, 0},
+					{0, 0, 1},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "should be true entries after pivot are not 0",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 1},
+					{0, 1, 1},
+					{0, 0, 1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "should be true with only two pivots",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 1},
+					{0, 0, 1},
+					{0, 0, 0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "should be true if there are no pivots",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "should be true if pivot is last column",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 1},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := allPivotsEqualTo1(tt.args.matrix); got != tt.want {
+				t.Errorf("allPivotsEqualTo1() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_allEntriesInBaseColumnAre0(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "should be true",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "should be false multiple non 0 entries in column",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "should be true all entries are 0",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "should be false all entries are 1",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 1},
+					{1, 1, 1},
+					{1, 1, 1},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "should be false non 0 entry in last row",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 0, 1},
+					{1, 0, 0},
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := allEntriesInBaseColumnAre0(tt.args.matrix); got != tt.want {
+				t.Errorf("allEntriesInBaseColumnAre0() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsReducedRowEchelonForm(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "should_pass",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "should_not_pass",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 1},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "should_pass_0_rows_at_bottom",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "should_pass_all_0s",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "should_not_pass_one_1_bottom",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+					{1, 0, 0},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "should_not_pass_not_1s",
+			args: args{
+				matrix: [][]float64{
+					{2, 0, 0},
+					{0, 2, 0},
+					{0, 0, 2},
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsReducedRowEchelonForm(tt.args.matrix); got != tt.want {
+				t.Errorf("IsReducedRowEchelonForm() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
