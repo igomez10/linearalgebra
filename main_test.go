@@ -566,6 +566,20 @@ func TestGetPivotEntries(t *testing.T) {
 				{0, 1},
 			},
 		},
+		{
+			name: "should_return_only_first_pivot_if_rest_0s",
+			args: args{
+				matrix: [][]float64{
+					{0, 1, 1},
+					{0, 0, 1},
+					{0, 0, 0},
+				},
+			},
+			want: [][]int{
+				{0, 1},
+				{1, 2},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
