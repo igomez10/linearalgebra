@@ -1,6 +1,7 @@
 package linearalgebra
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -497,6 +498,79 @@ func TestIsReducedRowEchelonForm(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsReducedRowEchelonForm(tt.args.matrix); got != tt.want {
 				t.Errorf("IsReducedRowEchelonForm() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetPivotEntries(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]int
+	}{
+		{
+			name: "should_return pivots",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: [][]int{
+				{0, 0},
+				{1, 1},
+				{2, 2},
+			},
+		},
+		{
+			name: "should_return_only_first_pivot",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 1},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: [][]int{
+				{0, 0},
+			},
+		},
+		{
+			name: "should_return_only_first_pivot_in_first_row",
+			args: args{
+				matrix: [][]float64{
+					{0, 1, 1},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: [][]int{
+				{0, 1},
+			},
+		},
+		{
+			name: "should_return_only_first_pivot_if_rest_0s",
+			args: args{
+				matrix: [][]float64{
+					{0, 1, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: [][]int{
+				{0, 1},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetPivotEntries(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetPivotEntries() = %v, want %v", got, tt.want)
 			}
 		})
 	}

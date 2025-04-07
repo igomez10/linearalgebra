@@ -5,6 +5,24 @@ package linearalgebra
 // ToRowEchelonForm returns a new matrix in row echelon form using Gaussian elimination
 // Implement a compiler for matrix manipulation commands
 
+// GetPivotEntries return the list of indexes where the pivot entries are located
+func GetPivotEntries(matrix [][]float64) [][]int {
+	// traverse row by row, when finds a non 0, move down until finds a 0,
+	//  then move right until finds a non 0, exit when columns or rows are over
+	answer := [][]int{}
+	i := 0
+	j := 0
+	for i < len(matrix) && j < len(matrix[i]) {
+		if matrix[i][j] != 0 {
+			answer = append(answer, []int{i, j})
+			i++
+		}
+		j++
+	}
+
+	return answer
+}
+
 func IsReducedRowEchelonForm(matrix [][]float64) bool {
 	// all pivots are equal to 1
 	if !IsRowEchelonForm(matrix) {
