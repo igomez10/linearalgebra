@@ -21,6 +21,10 @@ func MultiplyScalarByRow(matrix [][]float64, rowIndex int, scalar float64) [][]f
 		panic("invalid change")
 	}
 
+	if scalar == 0 {
+		panic("invalid change") // its not allowed to multiply by 0 in gauss jordan
+	}
+
 	for i := range matrix[rowIndex] {
 		matrix[rowIndex][i] *= scalar
 	}
