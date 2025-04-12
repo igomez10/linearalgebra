@@ -976,6 +976,28 @@ func TestToRowEchelonForm(t *testing.T) {
 		want [][]float64
 	}{
 		{
+			name: "only 1 row",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: [][]float64{
+				{1},
+			},
+		},
+		{
+			name: "only 1 row mutliplied by scalar",
+			args: args{
+				matrix: [][]float64{
+					{5},
+				},
+			},
+			want: [][]float64{
+				{1},
+			},
+		},
+		{
 			name: "should pass one row with 0s and multiple non 0s",
 			args: args{
 				matrix: [][]float64{
