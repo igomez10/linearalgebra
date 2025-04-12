@@ -3,8 +3,70 @@ package linearalgebra
 import "sort"
 
 // TODO
-// ToRowEchelonForm returns a new matrix in row echelon form using Gaussian elimination
 // Implement a compiler for matrix manipulation commands
+
+// ToRowEchelonForm returns a new matrix in row echelon form using Gaussian elimination
+// Swap the rows so that all rows with all zero entries are on the bottom
+// Swap the rows so that the row with the largest, leftmost nonzero entry is on top.
+// Multiply the top row by a scalar so that top row's leading entry becomes 1.
+// Add/subtract multiples of the top row to the other rows so that all other entries in the column containing the top row's leading entry are all zero.
+// Repeat steps 2-4 for the next leftmost nonzero entry until all the leading entries are 1.
+// Swap the rows so that the leading entry of each nonzero row is to the right of the leading entry of the row above it.
+func ToRowEchelonForm(matrix [][]float64) [][]float64 {
+	// Swap the rows so that all rows with all zero entries are on the bottom
+	matrix = SwapRows0sToBottom(matrix)
+
+	// Add/subtract multiples of the top row to the other rows so that all other
+	// entries in the column containing the top row's leading entry are all zero.
+	for i := 0; i < len(matrix); i++ {
+		for j := 0; j < len(matrix[i]); j++ {
+			// find non 0
+			if matrix[i][j] != 0 {
+				// make this row pivot row
+				matrix = MultiplyScalarByRow(matrix, i, float64(1/matrix[i][j]))
+
+				// turn every column in this pivot to 0
+				for z := 0; z < len(matrix); z++ {
+					if z == i {
+						continue
+					}
+
+					if matrix[z][j] != 0 {
+						tmp := matrix[z][j]
+						matrix = MultiplyScalarByRow(matrix, i, -matrix[z][j])
+						matrix = AddRowToRow(matrix, matrix[i], z)
+						matrix = MultiplyScalarByRow(matrix, i, float64(1/-tmp))
+					}
+				}
+				break
+			}
+		}
+	}
+
+	// turn current row into pivot row by multiplying by the inverse of the leading entry
+	// make every entry in the column of the leading entry 0
+	// find next pivot and do the same
+	matrix = SwapLargetsLeftmostNonzeroEntry(matrix)
+
+	return matrix
+}
+
+func SwapLargetsLeftmostNonzeroEntry(matrix [][]float64) [][]float64 {
+	sort.Slice(matrix, func(i, j int) bool {
+		for z := 0; z < len(matrix[i]); z++ {
+			itemI := matrix[i][z]
+			itemJ := matrix[j][z]
+
+			if itemI != itemJ {
+				return itemI > itemJ
+			}
+		}
+		return true
+	})
+
+	return matrix
+}
+
 func SwapRows0sToBottom(matrix [][]float64) [][]float64 {
 	sort.Slice(matrix, func(i, j int) bool {
 		for x := range matrix[i] {

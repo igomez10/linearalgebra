@@ -966,3 +966,268 @@ func TestSwapRows0sToBottom(t *testing.T) {
 	}
 }
 
+func TestToRowEchelonForm(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "should pass one row with 0s and multiple non 0s",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{4, 8, 16},
+				},
+			},
+			want: [][]float64{
+				{1, 2, 4},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "nothing to do",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "nothing to do",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "single 1 multiple of 3",
+			args: args{
+				matrix: [][]float64{
+					{3, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "example 0",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{1, 0, 1},
+					{0, 0, 1},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 0, 1},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "example 1.1",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 0, 0},
+					{0, 1, 1},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 1, 1},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "example 1.2",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 0},
+					{0, 1, 1},
+					{0, 0, 0},
+				},
+			},
+			want: [][]float64{
+				{1, 0, -1},
+				{0, 1, 1},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "example 1.3",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 0},
+					{0, 1, 1},
+					{0, 0, 0},
+				},
+			},
+			want: [][]float64{
+				{1, 0, -1},
+				{0, 1, 1},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "example 1.4",
+			args: args{
+				matrix: [][]float64{
+					{1, -1, 0},
+					{-4, 4, 1},
+					{0, 0, -1},
+				},
+			},
+			want: [][]float64{
+				{1, -1, 0},
+				{0, 0, 1},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "example 1.5",
+			args: args{
+				matrix: [][]float64{
+					{2, -2, 1},
+					{-2, 5, 6},
+					{10, 7, 1},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+		},
+		{
+			name: "example 1.6",
+			args: args{
+				matrix: [][]float64{
+					{-1, -2, 3},
+					{-2, -3, -5},
+					{1, 5, 5},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+		},
+		{
+			name: "example 1.7",
+			args: args{
+				matrix: [][]float64{
+					{3, 9, -3, 24},
+					{1, -3, 11, -2},
+					{-2, 5, -20, -5},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 5, 0},
+				{0, 1, -2, 0},
+				{0, 0, 0, 1},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToRowEchelonForm(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ToRowEchelonForm() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSwapLargetsLeftmostNonzeroEntry(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "nothing do do",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 0, 0},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "swap 1 and 2",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{2, 0, 0},
+				},
+			},
+			want: [][]float64{
+				{2, 0, 0},
+				{1, 0, 0},
+			},
+		},
+		{
+			name: "swap 1 and 2 other bigger number in same row",
+			args: args{
+				matrix: [][]float64{
+					{1, 9999, 9999},
+					{2, 0, 0},
+				},
+			},
+			want: [][]float64{
+				{2, 0, 0},
+				{1, 9999, 9999},
+			},
+		},
+		{
+			name: "swapped identity matrix",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 1},
+					{0, 1, 0},
+					{1, 0, 0},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := SwapLargetsLeftmostNonzeroEntry(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SwapLargetsLeftmostNonzeroEntry() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
