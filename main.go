@@ -67,6 +67,23 @@ func SwapLargetsLeftmostNonzeroEntry(matrix [][]float64) [][]float64 {
 	return matrix
 }
 
+func GenerateIdentityMatrix(n int) [][]float64 {
+	if n < 0 {
+		panic("illegal operation")
+	}
+
+	matrix := make([][]float64, n)
+	for i := range matrix {
+		matrix[i] = make([]float64, n)
+	}
+
+	for i := range n {
+		matrix[i][i] = 1
+	}
+
+	return matrix
+}
+
 func SwapRows0sToBottom(matrix [][]float64) [][]float64 {
 	sort.Slice(matrix, func(i, j int) bool {
 		for x := range matrix[i] {
