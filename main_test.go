@@ -1367,3 +1367,242 @@ func TestMultiplyMatrixByScalar(t *testing.T) {
 		})
 	}
 }
+
+func Test_isZeroMatrix(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "should_be_true",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "should_be_false",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "should_be_end_row",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+					{0, 0, 1},
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsZeroMatrix(tt.args.matrix); got != tt.want {
+				t.Errorf("isZeroMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_canMultiplyMatrices(t *testing.T) {
+	type args struct {
+		matrixA [][]float64
+		matrixB [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "can multiply 3x3 3x3",
+			args: args{
+				matrixA: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+				matrixB: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "can multiply 2x3 3x2",
+			args: args{
+				matrixA: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+				matrixB: [][]float64{
+					{0, 0},
+					{0, 0},
+					{0, 0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "can multiply  3x2 2x3",
+			args: args{
+				matrixA: [][]float64{
+					{0, 0},
+					{0, 0},
+					{0, 0},
+				},
+				matrixB: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "can multiply 1x1 1x1",
+			args: args{
+				matrixA: [][]float64{
+					{0},
+				},
+				matrixB: [][]float64{
+					{0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "cannot multiply 1x3 1x1",
+			args: args{
+				matrixA: [][]float64{
+					{0, 0, 0},
+				},
+				matrixB: [][]float64{
+					{0},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "cannot multiply 1x3 1x1",
+			args: args{
+				matrixA: [][]float64{
+					{0, 0, 0},
+				},
+				matrixB: [][]float64{
+					{0},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "cannot multiply 2x3 4x2",
+			args: args{
+				matrixA: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+				matrixB: [][]float64{
+					{0, 0},
+					{0, 0},
+					{0, 0},
+					{0, 0},
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CanMultiplyMatrices(tt.args.matrixA, tt.args.matrixB); got != tt.want {
+				t.Errorf("canMultuplyMatrices() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_multiplyMatrices(t *testing.T) {
+	type args struct {
+		matrixA [][]float64
+		matrixB [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "simple case 1x1 1x1",
+			args: args{
+				matrixA: [][]float64{
+					{3},
+				},
+				matrixB: [][]float64{
+					{2},
+				},
+			},
+			want: [][]float64{
+				{6},
+			},
+		},
+		{
+			name: "simple case 1x2 2x1",
+			args: args{
+				matrixA: [][]float64{
+					{1, 2},
+				},
+				matrixB: [][]float64{
+					{2},
+					{3},
+				},
+			},
+			want: [][]float64{
+				{1*2 + 2*3},
+			},
+		},
+		{
+			name: "example 1",
+			args: args{
+				matrixA: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				matrixB: [][]float64{
+					{1, 2, 1},
+					{2, 4, 6},
+					{7, 2, 5},
+				},
+			},
+			want: [][]float64{
+				{26, 16, 28},
+				{56, 40, 64},
+				{86, 64, 100},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MultiplyMatrices(tt.args.matrixA, tt.args.matrixB); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("multiplyMatrices() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -128,6 +128,44 @@ func MultiplyScalarByRow(matrix [][]float64, rowIndex int, scalar float64) [][]f
 	return matrix
 }
 
+func IsZeroMatrix(matrix [][]float64) bool {
+	for i := range matrix {
+		for j := range matrix[i] {
+			if matrix[i][j] != 0 {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func CanMultiplyMatrices(matrixA, matrixB [][]float64) bool {
+	return len(matrixA[0]) == len(matrixB)
+}
+
+// miltiply matrices will use dot product to multiply two matrices
+func MultiplyMatrices(matrixA, matrixB [][]float64) [][]float64 {
+	if !CanMultiplyMatrices(matrixA, matrixB) {
+		panic("invalid multiplication")
+	}
+
+	newMatrix := make([][]float64, len(matrixA))
+	for i := range newMatrix {
+		newMatrix[i] = make([]float64, len(matrixB[0]))
+	}
+
+	for i := range newMatrix {
+		for j := range newMatrix[i] {
+			for z := range matrixB {
+				newMatrix[i][j] += matrixA[i][z] * matrixB[z][j]
+			}
+		}
+	}
+
+	return newMatrix
+}
+
 func MultiplyMatrixByScalar(matrix [][]float64, scalar float64) [][]float64 {
 	for i := range matrix {
 		matrix = MultiplyScalarByRow(matrix, i, scalar)
