@@ -1283,3 +1283,87 @@ func TestAddMatrices(t *testing.T) {
 		})
 	}
 }
+
+func TestMultiplyMatrixByScalar(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+		scalar float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "multtiply by 0",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 1},
+					{1, 1, 1},
+					{1, 1, 1},
+				},
+				scalar: 0,
+			},
+			want: [][]float64{
+				{0, 0, 0},
+				{0, 0, 0},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "multtiply by 1",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 1},
+					{1, 1, 1},
+					{1, 1, 1},
+				},
+				scalar: 1,
+			},
+			want: [][]float64{
+				{1, 1, 1},
+				{1, 1, 1},
+				{1, 1, 1},
+			},
+		},
+		{
+			name: "multtiply by 2",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 1},
+					{1, 1, 1},
+					{1, 1, 1},
+				},
+				scalar: 2,
+			},
+			want: [][]float64{
+				{2, 2, 2},
+				{2, 2, 2},
+				{2, 2, 2},
+			},
+		},
+		{
+			name: "multtiply identity matrix by 9",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 2, 0},
+					{0, 0, 3},
+				},
+				scalar: 9,
+			},
+			want: [][]float64{
+				{9, 0, 0},
+				{0, 18, 0},
+				{0, 0, 27},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MultiplyMatrixByScalar(tt.args.matrix, tt.args.scalar); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MultiplyMatrixByScalar() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
