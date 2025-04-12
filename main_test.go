@@ -771,7 +771,7 @@ func TestMultiplyScalarByRow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MultiplyScalarByRow(tt.args.matrix, tt.args.rowIndex, tt.args.scalar); !reflect.DeepEqual(got, tt.want) {
+			if got := MultiplyRowByScalar(tt.args.matrix, tt.args.rowIndex, tt.args.scalar); !reflect.DeepEqual(got, tt.want) {
 				fmt.Println("got:")
 				for i := range got {
 					fmt.Printf("%f ", got[i])

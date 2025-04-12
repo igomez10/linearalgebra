@@ -23,7 +23,7 @@ func ToRowEchelonForm(matrix [][]float64) [][]float64 {
 			// find non 0
 			if matrix[i][j] != 0 {
 				// make this row pivot row
-				matrix = MultiplyScalarByRow(matrix, i, float64(1/matrix[i][j]))
+				matrix = MultiplyRowByScalar(matrix, i, float64(1/matrix[i][j]))
 
 				// turn every column in this pivot to 0
 				for z := 0; z < len(matrix); z++ {
@@ -33,9 +33,9 @@ func ToRowEchelonForm(matrix [][]float64) [][]float64 {
 
 					if matrix[z][j] != 0 {
 						tmp := matrix[z][j]
-						matrix = MultiplyScalarByRow(matrix, i, -matrix[z][j])
+						matrix = MultiplyRowByScalar(matrix, i, -matrix[z][j])
 						matrix = AddRowToRow(matrix, matrix[i], z)
-						matrix = MultiplyScalarByRow(matrix, i, float64(1/-tmp))
+						matrix = MultiplyRowByScalar(matrix, i, float64(1/-tmp))
 					}
 				}
 				break
@@ -133,7 +133,7 @@ func AddMatrices(matrixA, matrixB [][]float64) [][]float64 {
 	return response
 }
 
-func MultiplyScalarByRow(matrix [][]float64, rowIndex int, scalar float64) [][]float64 {
+func MultiplyRowByScalar(matrix [][]float64, rowIndex int, scalar float64) [][]float64 {
 	if rowIndex < 0 || rowIndex >= len(matrix) {
 		panic("invalid change")
 	}
@@ -185,7 +185,7 @@ func MultiplyMatrices(matrixA, matrixB [][]float64) [][]float64 {
 
 func MultiplyMatrixByScalar(matrix [][]float64, scalar float64) [][]float64 {
 	for i := range matrix {
-		matrix = MultiplyScalarByRow(matrix, i, scalar)
+		matrix = MultiplyRowByScalar(matrix, i, scalar)
 	}
 	return matrix
 }
