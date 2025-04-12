@@ -1231,3 +1231,55 @@ func TestSwapLargetsLeftmostNonzeroEntry(t *testing.T) {
 		})
 	}
 }
+
+func TestAddMatrices(t *testing.T) {
+	type args struct {
+		matrixA [][]float64
+		matrixB [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "add 0s",
+			args: args{
+				matrixA: [][]float64{{0, 0, 0}},
+				matrixB: [][]float64{{0, 0, 0}},
+			},
+			want: [][]float64{{0, 0, 0}},
+		},
+		{
+			name: "one matrix is 0",
+			args: args{
+				matrixA: [][]float64{{1, 0, 0}},
+				matrixB: [][]float64{{0, 0, 0}},
+			},
+			want: [][]float64{{1, 0, 0}},
+		},
+		{
+			name: "simple sum",
+			args: args{
+				matrixA: [][]float64{{1, 1, 1}},
+				matrixB: [][]float64{{1, 1, 1}},
+			},
+			want: [][]float64{{2, 2, 2}},
+		},
+		{
+			name: "should be zero matrix",
+			args: args{
+				matrixA: [][]float64{{-1, -1, -1}},
+				matrixB: [][]float64{{1, 1, 1}},
+			},
+			want: [][]float64{{0, 0, 0}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AddMatrices(tt.args.matrixA, tt.args.matrixB); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AddMatrices() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

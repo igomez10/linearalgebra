@@ -97,6 +97,25 @@ func SwapRows(matrix [][]float64, i, j int) [][]float64 {
 	return matrix
 }
 
+func AddMatrices(matrixA, matrixB [][]float64) [][]float64 {
+	if len(matrixA) != len(matrixB) {
+		panic("illegal operation")
+	}
+
+	response := make([][]float64, len(matrixA))
+	for r := range response {
+		response[r] = make([]float64, len(matrixA[0]))
+	}
+
+	for i := range matrixA {
+		for j := range matrixA[i] {
+			response[i][j] = matrixA[i][j] + matrixB[i][j]
+		}
+	}
+
+	return response
+}
+
 func MultiplyScalarByRow(matrix [][]float64, rowIndex int, scalar float64) [][]float64 {
 	if rowIndex < 0 || rowIndex >= len(matrix) {
 		panic("invalid change")
