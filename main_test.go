@@ -1619,6 +1619,26 @@ func Test_multiplyMatrices(t *testing.T) {
 				{86, 64, 100},
 			},
 		},
+		{
+			name: "example 2",
+			args: args{
+				matrixA: [][]float64{
+					{1, 0, 0},
+					{5, 1, 0},
+					{0, 0, 1},
+				},
+				matrixB: [][]float64{
+					{-1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: [][]float64{
+				{-1, 0, 0},
+				{-5, 1, 0},
+				{0, 0, 1},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1680,6 +1700,74 @@ func TestGenerateIdentityMatrix(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GenerateIdentityMatrix(tt.args.n); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GenerateIdentityMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMultiplyVectorByScalar(t *testing.T) {
+	type args struct {
+		vector []float64
+		scalar float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want []float64
+	}{
+		{
+			name: "no changes",
+			args: args{
+				vector: []float64{},
+				scalar: 1,
+			},
+			want: []float64{},
+		},
+		{
+			name: "multiply by 1",
+			args: args{
+				vector: []float64{1},
+				scalar: 1,
+			},
+			want: []float64{1},
+		},
+		{
+			name: "multiply by 0",
+			args: args{
+				vector: []float64{1},
+				scalar: 0,
+			},
+			want: []float64{0},
+		},
+		{
+			name: "multiply nums by 5",
+			args: args{
+				vector: []float64{1, 2, 3, 4},
+				scalar: 5,
+			},
+			want: []float64{5, 10, 15, 20},
+		},
+		{
+			name: "multiply nums by -5",
+			args: args{
+				vector: []float64{1, 2, 3, 4},
+				scalar: -5,
+			},
+			want: []float64{-5, -10, -15, -20},
+		},
+		{
+			name: "multiply nums by 0",
+			args: args{
+				vector: []float64{1, 2, 3, 4},
+				scalar: 0,
+			},
+			want: []float64{0, 0, 0, 0},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MultiplyVectorByScalar(tt.args.vector, tt.args.scalar); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MultiplyVectorByScalar() = %v, want %v", got, tt.want)
 			}
 		})
 	}

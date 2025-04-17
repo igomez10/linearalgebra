@@ -145,6 +145,14 @@ func MultiplyRowByScalar(matrix [][]float64, rowIndex int, scalar float64) [][]f
 	return matrix
 }
 
+func MultiplyVectorByScalar(vector []float64, scalar float64) []float64 {
+	for i := range vector {
+		vector[i] *= scalar
+	}
+
+	return vector
+}
+
 func IsZeroMatrix(matrix [][]float64) bool {
 	for i := range matrix {
 		for j := range matrix[i] {
