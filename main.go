@@ -1,6 +1,9 @@
 package linearalgebra
 
-import "sort"
+import (
+	"math"
+	"sort"
+)
 
 // TODO
 // Implement a compiler for matrix manipulation commands
@@ -49,6 +52,77 @@ func ToRowEchelonForm(matrix [][]float64) [][]float64 {
 	matrix = SwapLargetsLeftmostNonzeroEntry(matrix)
 
 	return matrix
+}
+
+func copyMatrix(matrix [][]float64) [][]float64 {
+	newMatrix := make([][]float64, len(matrix))
+
+	for i := range matrix {
+		newMatrix[i] = make([]float64, len(matrix[i]))
+		copy(newMatrix[i], matrix[i])
+	}
+
+	return newMatrix
+}
+
+func GetEliminationMatrix(matrix [][]float64) [][]float64 {
+	if len(matrix) == 0 || len(matrix[0]) == 0 {
+		return [][]float64{}
+	}
+	// Swap the rows so that all rows with all zero entries are on the bottom
+	matrix = SwapRows0sToBottom(matrix)
+	changeMatrices := [][][]float64{}
+
+	// Add/subtract multiples of the top row to the other rows so that all other
+	// entries in the column containing the top row's leading entry are all zero.
+	for i := 0; i < len(matrix); i++ {
+		for j := 0; j < len(matrix[i]); j++ {
+			// find non 0
+			if matrix[i][j] != 0 {
+				// make this row pivot row
+				tmp := matrix[i][j]
+				matrix = MultiplyRowByScalar(matrix, i, float64(1/tmp))
+				changeMatrix := MultiplyRowByScalar(GenerateIdentityMatrix(len(matrix)), i, float64(1/tmp))
+				changeMatrices = append(changeMatrices, changeMatrix)
+
+				// turn every column in this pivot to 0
+				for z := 0; z < len(matrix); z++ {
+					if z == i {
+						continue
+					}
+
+					if matrix[z][j] != 0 {
+						tmp := matrix[z][j]
+
+						matrix = MultiplyRowByScalar(matrix, i, -tmp)
+						changeMatrix = MultiplyRowByScalar(GenerateIdentityMatrix(len(matrix)), i, -tmp)
+
+						matrix = AddRowToRow(matrix, matrix[i], z)
+						changeMatrix = AddRowToRow(changeMatrix, changeMatrix[i], z)
+
+						matrix = MultiplyRowByScalar(matrix, i, float64(1/-tmp))
+						changeMatrix = MultiplyRowByScalar(changeMatrix, i, float64(1/-tmp))
+
+						changeMatrices = append(changeMatrices, changeMatrix)
+					}
+				}
+				break
+			}
+		}
+	}
+
+	// turn current row into pivot row by multiplying by the inverse of the leading entry
+	// make every entry in the column of the leading entry 0
+	// find next pivot and do the same
+	_ = SwapLargetsLeftmostNonzeroEntry(matrix)
+	// eliminationMatrix = SwapLargetsLeftmostNonzeroEntry(eliminationMatrix)
+
+	eliminationMatrix := changeMatrices[0]
+	for i := 1; i < len(changeMatrices); i++ {
+		eliminationMatrix = MultiplyMatrices(changeMatrices[i], eliminationMatrix)
+	}
+
+	return eliminationMatrix
 }
 
 func SwapLargetsLeftmostNonzeroEntry(matrix [][]float64) [][]float64 {
@@ -166,6 +240,14 @@ func IsZeroMatrix(matrix [][]float64) bool {
 }
 
 func CanMultiplyMatrices(matrixA, matrixB [][]float64) bool {
+	if len(matrixA) == 0 || len(matrixB) == 0 {
+		if len(matrixA) == 0 && len(matrixB) == 0 {
+			return true
+		}
+
+		return false
+	}
+
 	return len(matrixA[0]) == len(matrixB)
 }
 
@@ -183,7 +265,7 @@ func MultiplyMatrices(matrixA, matrixB [][]float64) [][]float64 {
 	for i := range newMatrix {
 		for j := range newMatrix[i] {
 			for z := range matrixB {
-				newMatrix[i][j] += matrixA[i][z] * matrixB[z][j]
+				newMatrix[i][j] += float64(matrixA[i][z]) * float64(matrixB[z][j])
 			}
 		}
 	}
@@ -298,6 +380,21 @@ func IsRowEchelonForm(matrix [][]float64) bool {
 	return true
 }
 
+// used to compare floats
+func nearlyEqual(a, b float64, decimals int) bool {
+	if a == b {
+		return true
+	}
+
+	diff := math.Abs(a - b)
+	allowedError := 1 / math.Pow(10, float64(decimals))
+	if diff > allowedError {
+		return false
+	}
+
+	return true
+}
+
 func allZeroRowsAreAtBottom(matrix [][]float64) bool {
 	foundRowsOfOnly0s := false
 	for _, row := range matrix {
@@ -327,7 +424,7 @@ func allPivotEntriesAreRightOfPivotbove(matrix [][]float64) bool {
 	currentPivot := []int{-1, -1}
 	for i := 0; i < len(matrix); i++ {
 		for j := 0; j < len(matrix[i]); j++ {
-			if matrix[i][j] != 0 {
+			if !nearlyEqual(matrix[i][j], float64(0), 3) {
 				if j <= currentPivot[1] {
 					return false
 				}

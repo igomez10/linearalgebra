@@ -429,6 +429,13 @@ func TestIsReducedRowEchelonForm(t *testing.T) {
 		want bool
 	}{
 		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: true,
+		},
+		{
 			name: "should_pass",
 			args: args{
 				matrix: [][]float64{
@@ -1453,6 +1460,14 @@ func Test_canMultiplyMatrices(t *testing.T) {
 		want bool
 	}{
 		{
+			name: "empty matrices",
+			args: args{
+				matrixA: [][]float64{},
+				matrixB: [][]float64{},
+			},
+			want: true,
+		},
+		{
 			name: "can multiply 3x3 3x3",
 			args: args{
 				matrixA: [][]float64{
@@ -1639,6 +1654,60 @@ func Test_multiplyMatrices(t *testing.T) {
 				{0, 0, 1},
 			},
 		},
+		{
+			name: "example 3",
+			args: args{
+				matrixA: [][]float64{
+					{1, 0},
+					{0, float64(1) / float64(2)},
+				},
+				matrixB: [][]float64{
+					{-1, 0},
+					{0, 0},
+				},
+			},
+			want: [][]float64{
+				{-1, 0},
+				{0, 0},
+			},
+		},
+		{
+			name: "example 4",
+			args: args{
+				matrixA: [][]float64{
+					{1, -2},
+					{0, 1},
+				},
+				matrixB: [][]float64{
+					{-1, 0},
+					{0, 0},
+				},
+			},
+			want: [][]float64{
+				{-1, 0},
+				{0, 0},
+			},
+		},
+		{
+			name: "example 5",
+			args: args{
+				matrixA: [][]float64{
+					{-1, -5, 1},
+					{-5, -5, 5},
+					{2, 5, -3},
+				},
+				matrixB: [][]float64{
+					{float64(-1) / float64(2), float64(-1) / float64(2), -1},
+					{float64(-1) / float64(4), float64(1) / float64(20), 0},
+					{float64(-3) / float64(4), float64(-1) / float64(4), -1},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1700,6 +1769,104 @@ func TestGenerateIdentityMatrix(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GenerateIdentityMatrix(tt.args.n); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GenerateIdentityMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetEliminationMatrix(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "size 0",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "size 1",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: [][]float64{
+				{1},
+			},
+		},
+		{
+			name: "multiple of 5",
+			args: args{
+				matrix: [][]float64{
+					{5},
+				},
+			},
+			want: [][]float64{
+				{float64(1) / float64(5)},
+			},
+		},
+		{
+			name: "size 2",
+			args: args{
+				matrix: [][]float64{
+					{5, 0},
+					{0, 0},
+				},
+			},
+			want: [][]float64{
+				{float64(1) / float64(5), 0},
+				{0, 1},
+			},
+		},
+		{
+			name: "example 0",
+			args: args{
+				matrix: [][]float64{
+					{2, 4},
+					{0, -3},
+				},
+			},
+			want: [][]float64{
+				{float64(1) / float64(2), float64(2) / float64(3)},
+				{0, float64(-1) / float64(3)},
+			},
+		},
+		{
+			name: "example",
+			args: args{
+				matrix: [][]float64{
+					{-1, -5, 1},
+					{-5, -5, 5},
+					{2, 5, -3},
+				},
+			},
+			want: [][]float64{
+				{float64(-1) / float64(2), float64(-1) / float64(2), -1},
+				{float64(-1) / float64(4), float64(1) / float64(20), 0},
+				{float64(-3) / float64(4), float64(-1) / float64(4), -1},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			originalMatrix := copyMatrix(tt.args.matrix)
+			got := GetEliminationMatrix(tt.args.matrix)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetEliminationMatrix() = %v, want %v", got, tt.want)
+			}
+
+			// TODO confirm inverse works
+
+			multiplied := MultiplyMatrices(got, originalMatrix)
+			if !IsRowEchelonForm(multiplied) {
+				t.Errorf("expected to be reduced row echelon form")
 			}
 		})
 	}
@@ -1768,6 +1935,81 @@ func TestMultiplyVectorByScalar(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := MultiplyVectorByScalar(tt.args.vector, tt.args.scalar); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("MultiplyVectorByScalar() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_nearlyEqual(t *testing.T) {
+	type args struct {
+		a        float64
+		b        float64
+		decimals int
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "exactly equal",
+			args: args{
+				a:        float64(0),
+				b:        float64(0),
+				decimals: 1,
+			},
+			want: true,
+		},
+		{
+			name: "not equal",
+			args: args{
+				a:        float64(1),
+				b:        float64(2),
+				decimals: 1,
+			},
+			want: false,
+		},
+		{
+			name: "exactly equal with one decimal",
+			args: args{
+				a:        float64(0.01),
+				b:        float64(0.01),
+				decimals: 3,
+			},
+			want: true,
+		},
+		{
+			name: "exactly equal with two decimals",
+			args: args{
+				a:        float64(0.001),
+				b:        float64(0.001),
+				decimals: 3,
+			},
+			want: true,
+		},
+		{
+			name: "exactly equal with three decimals",
+			args: args{
+				a:        float64(0.0001),
+				b:        float64(0.0001),
+				decimals: 3,
+			},
+			want: true,
+		},
+		{
+			name: "equal with three decimals",
+			args: args{
+				a:        float64(0.0001),
+				b:        float64(0.0009),
+				decimals: 3,
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := nearlyEqual(tt.args.a, tt.args.b, tt.args.decimals); got != tt.want {
+				t.Errorf("nearlyEqual() = %v, want %v", got, tt.want)
 			}
 		})
 	}
