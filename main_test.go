@@ -2206,3 +2206,119 @@ func TestGetNumberOfSolutions(t *testing.T) {
 		})
 	}
 }
+
+func TestGetMatrixSpan(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "simple solution",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: 0,
+		},
+		{
+			name: "single line",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "single line size not 1",
+			args: args{
+				matrix: [][]float64{
+					{9},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "multiple single line vectors",
+			args: args{
+				matrix: [][]float64{
+					{9},
+					{9},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "vector in two dimensions",
+			args: args{
+				matrix: [][]float64{
+					{1, 1},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "two linearly independent vectors in two dimensions",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 1},
+				},
+			},
+			want: 2,
+		},
+		{
+			name: "three vectors in two dimensions",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 1},
+					{1, 1},
+				},
+			},
+			want: 2,
+		},
+		{
+			name: "three linearly indepdendent vectors in three dimensions",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: 3,
+		},
+		{
+			name: "three dependent vectors in three dimensions",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 1},
+					{2, 2, 2},
+					{3, 3, 3},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "two independent vectors in three dimensions",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 1},
+				},
+			},
+			want: 2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetMatrixSpan(tt.args.matrix); got != tt.want {
+				t.Errorf("GetMatrixSpan() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

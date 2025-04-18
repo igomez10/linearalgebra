@@ -477,3 +477,26 @@ func GetNumberOfSolutions(matrix [][]float64) float64 {
 
 	return 0
 }
+
+// find number of pivots, count them and return them
+// for R2 we return 2
+// for R3 we return 3
+// for Rn we return n
+func GetMatrixSpan(matrix [][]float64) int {
+	copiedMatrix := copyMatrix(matrix)
+	copiedMatrix = ToRowEchelonForm(copiedMatrix)
+
+	// count number of pivots
+
+	counter := 0
+	for i := range copiedMatrix {
+		for j := range copiedMatrix[i] {
+			if copiedMatrix[i][j] != 0 {
+				counter++
+				break
+			}
+		}
+	}
+
+	return counter
+}
