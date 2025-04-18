@@ -2,6 +2,7 @@ package linearalgebra
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"testing"
 )
@@ -2010,6 +2011,128 @@ func Test_nearlyEqual(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := nearlyEqual(tt.args.a, tt.args.b, tt.args.decimals); got != tt.want {
 				t.Errorf("nearlyEqual() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetVectorLength(t *testing.T) {
+	type args struct {
+		vector []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			name: "empty vector",
+			args: args{
+				vector: []float64{},
+			},
+			want: 0,
+		},
+		{
+			name: "single number vector",
+			args: args{
+				vector: []float64{1},
+			},
+			want: 1,
+		},
+		{
+			name: "two dimensions",
+			args: args{
+				vector: []float64{1, 1},
+			},
+			want: math.Sqrt(2),
+		},
+		{
+			name: "two dimensions but longer",
+			args: args{
+				vector: []float64{2, 2},
+			},
+			want: math.Sqrt(8),
+		},
+		{
+			name: "two dimensions where one is negative",
+			args: args{
+				vector: []float64{2, -2},
+			},
+			want: math.Sqrt(8),
+		},
+		{
+			name: "two dimensions where both are negative",
+			args: args{
+				vector: []float64{-2, -2},
+			},
+			want: math.Sqrt(8),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetVectorLength(tt.args.vector); got != tt.want {
+				t.Errorf("GetVectorLength() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetUnitVector(t *testing.T) {
+	type args struct {
+		vector []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want []float64
+	}{
+		{
+			name: "empty vector",
+			args: args{
+				vector: []float64{},
+			},
+			want: []float64{},
+		},
+		{
+			name: "single component",
+			args: args{
+				vector: []float64{1},
+			},
+			want: []float64{1},
+		},
+		{
+			name: "two components 1 1",
+			args: args{
+				vector: []float64{1, 1},
+			},
+			want: []float64{1 / float64(math.Sqrt(2)), 1 / float64(math.Sqrt(2))},
+		},
+		{
+			name: "two components 2 2",
+			args: args{
+				vector: []float64{2, 2},
+			},
+			want: []float64{2 / float64(math.Sqrt(8)), 2 / float64(math.Sqrt(8))},
+		},
+		{
+			name: "example 1",
+			args: args{
+				vector: []float64{4, -3},
+			},
+			want: []float64{4 / float64(5), -3 / float64(5)},
+		},
+		{
+			name: "example 2",
+			args: args{
+				vector: []float64{1, 2, 3},
+			},
+			want: []float64{1 / float64(math.Sqrt(14)), 2 / float64(math.Sqrt(14)), 3 / float64(math.Sqrt(14))},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetUnitVector(tt.args.vector); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetUnitVector() = %v, want %v", got, tt.want)
 			}
 		})
 	}

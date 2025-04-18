@@ -437,3 +437,24 @@ func allPivotEntriesAreRightOfPivotbove(matrix [][]float64) bool {
 
 	return true
 }
+
+func GetVectorLength(vector []float64) float64 {
+	var powed float64 = 0
+	for i := range vector {
+		powed += math.Pow(vector[i], 2)
+	}
+
+	return math.Sqrt(powed)
+}
+
+func GetUnitVector(vector []float64) []float64 {
+	res := make([]float64, len(vector))
+	copy(res, vector)
+	vectorLength := GetVectorLength(vector)
+
+	for i := range vector {
+		res[i] = float64(vector[i]) / float64(vectorLength)
+	}
+
+	return res
+}
