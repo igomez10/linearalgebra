@@ -2137,3 +2137,72 @@ func TestGetUnitVector(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNumberOfSolutions(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			name: "identity matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 1},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "identity matrix before rref",
+			args: args{
+				matrix: [][]float64{
+					{1, 1},
+					{0, 1},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "no solutions",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 0},
+				},
+			},
+			want: 0,
+		},
+		{
+			name: "no solutions all the same",
+			args: args{
+				matrix: [][]float64{
+					{1, 1},
+					{1, 1},
+				},
+			},
+			want: 0,
+		},
+		{
+			name: "no solutions all 0s",
+			args: args{
+				matrix: [][]float64{
+					{0, 0},
+					{0, 0},
+				},
+			},
+			want: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetNumberOfSolutions(tt.args.matrix); got != tt.want {
+				t.Errorf("GetNumberOfSolutions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

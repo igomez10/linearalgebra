@@ -458,3 +458,22 @@ func GetUnitVector(vector []float64) []float64 {
 
 	return res
 }
+
+// Get number of solutions, 0, 1
+// We will assume that result column is not in the matrix
+// therefore it is not possible to identify a matrix with
+// infinite solutions
+func GetNumberOfSolutions(matrix [][]float64) float64 {
+	matrixCopied := copyMatrix(matrix)
+	matrixCopied = ToRowEchelonForm(matrixCopied)
+
+	// if in rref the last row is 0s then we have 0 solutions
+	for i := range matrixCopied[len(matrixCopied)-1] {
+		if matrixCopied[len(matrixCopied)-1][i] != 0 {
+			// found a non 0 component, we have 1 solution
+			return 1
+		}
+	}
+
+	return 0
+}
