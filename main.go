@@ -500,3 +500,62 @@ func GetMatrixSpan(matrix [][]float64) int {
 
 	return counter
 }
+
+func areVectorsLinearlyIndependent(vectors [][]float64) bool {
+	if len(vectors) == 0 {
+		return true
+	}
+
+	if len(vectors) != len(vectors[0]) {
+		return false
+	}
+
+	cols := len(vectors[0])
+	for i := range vectors {
+		if len(vectors[i]) != cols {
+			return false
+		}
+	}
+
+	rref := ToRowEchelonForm(vectors)
+	isIdentity := areMatricesEqual(rref, GenerateIdentityMatrix(len(rref)))
+	return isIdentity
+}
+
+func areMatricesEqual(matrixA, matrixB [][]float64) bool {
+	if len(matrixA) != len(matrixB) {
+		return false
+	}
+
+	if len(matrixA) == 0 {
+		return true
+	}
+
+	cols := len(matrixA[0])
+	if cols != len(matrixB[0]) {
+		return false
+	}
+
+	// ensure matrix A has same number of cols in all rows
+	for i := range matrixA {
+		if len(matrixA[i]) != cols {
+			return false
+		}
+	}
+
+	for i := range matrixB {
+		if len(matrixB[i]) != cols {
+			return false
+		}
+	}
+
+	for i := range matrixA {
+		for j := range matrixA[i] {
+			if matrixA[i][j] != matrixB[i][j] {
+				return false
+			}
+		}
+	}
+
+	return true
+}

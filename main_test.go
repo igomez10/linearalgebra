@@ -2322,3 +2322,161 @@ func TestGetMatrixSpan(t *testing.T) {
 		})
 	}
 }
+
+func Test_areVectorsLinearlyIndependent(t *testing.T) {
+	type args struct {
+		vectors [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "empty vectors",
+			args: args{
+				vectors: [][]float64{},
+			},
+			want: true,
+		},
+		{
+			name: "identitymatrix",
+			args: args{
+				vectors: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "not indep same vector",
+			args: args{
+				vectors: [][]float64{
+					{1, 0},
+					{1, 0},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "not indep multiplied by scalar",
+			args: args{
+				vectors: [][]float64{
+					{1, 1},
+					{4, 4},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "not indep sum of other vectors",
+			args: args{
+				vectors: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{1, 1, 0},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "idependent but not in rref",
+			args: args{
+				vectors: [][]float64{
+					{1, -1, 0},
+					{0, 1, -3},
+					{-2, 0, 1},
+				},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := areVectorsLinearlyIndependent(tt.args.vectors); got != tt.want {
+				t.Errorf("areVectorsLinearlyIndependent() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_areMatricesEqual(t *testing.T) {
+	type args struct {
+		matrixA [][]float64
+		matrixB [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "empty matrices",
+			args: args{
+				matrixA: [][]float64{},
+				matrixB: [][]float64{},
+			},
+			want: true,
+		},
+		{
+			name: "single vector",
+			args: args{
+				matrixA: [][]float64{{1}},
+				matrixB: [][]float64{{1}},
+			},
+			want: true,
+		},
+		{
+			name: "two dimensional matrices",
+			args: args{
+				matrixA: [][]float64{{1, 0}},
+				matrixB: [][]float64{{1, 0}},
+			},
+			want: true,
+		},
+		{
+			name: "two three dimensional matrices",
+			args: args{
+				matrixA: [][]float64{{1, 2, 3}},
+				matrixB: [][]float64{{1, 2, 3}},
+			},
+			want: true,
+		},
+		{
+			name: "cols is not same as rows",
+			args: args{
+				matrixA: [][]float64{{1, 2}},
+				matrixB: [][]float64{{1, 2, 3}},
+			},
+			want: false,
+		},
+		{
+			name: "one component is different",
+			args: args{
+				matrixA: [][]float64{{1, 0, 0, 0}},
+				matrixB: [][]float64{{1, 0, 0, 1}},
+			},
+			want: false,
+		},
+		{
+			name: "inverted dimensions",
+			args: args{
+				matrixA: [][]float64{{0, 0}},
+				matrixB: [][]float64{
+					{0},
+					{0},
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := areMatricesEqual(tt.args.matrixA, tt.args.matrixB); got != tt.want {
+				t.Errorf("areMatricesEqual() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
