@@ -559,3 +559,16 @@ func areMatricesEqual(matrixA, matrixB [][]float64) bool {
 
 	return true
 }
+
+func dotProduct(vectorA, vectorB []float64) float64 {
+	if len(vectorA) != len(vectorB) {
+		panic("illegal operation")
+	}
+
+	var res float64 = 0
+	for i := range vectorA {
+		res += vectorA[i] * vectorB[i]
+	}
+
+	return res
+}

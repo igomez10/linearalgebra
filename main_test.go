@@ -2480,3 +2480,79 @@ func Test_areMatricesEqual(t *testing.T) {
 		})
 	}
 }
+
+func Test_dotProduct(t *testing.T) {
+	type args struct {
+		vectorA []float64
+		vectorB []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			name: "empty vectors",
+			args: args{
+				vectorA: []float64{},
+				vectorB: []float64{},
+			},
+			want: 0,
+		},
+		{
+			name: "simple case",
+			args: args{
+				vectorA: []float64{1},
+				vectorB: []float64{1},
+			},
+			want: 1,
+		},
+		{
+			name: "simple case two dimensions",
+			args: args{
+				vectorA: []float64{1, 1},
+				vectorB: []float64{1, 1},
+			},
+			want: 2,
+		},
+		{
+			name: "vectorA is zero vector",
+			args: args{
+				vectorA: []float64{0, 0},
+				vectorB: []float64{1, 1},
+			},
+			want: 0,
+		},
+		{
+			name: "both are zero vector",
+			args: args{
+				vectorA: []float64{0, 0},
+				vectorB: []float64{0, 0},
+			},
+			want: 0,
+		},
+		{
+			name: "vectorB is zero vector",
+			args: args{
+				vectorA: []float64{1, 1},
+				vectorB: []float64{0, 0},
+			},
+			want: 0,
+		},
+		{
+			name: "vectorB is zero vector",
+			args: args{
+				vectorA: []float64{1, 1},
+				vectorB: []float64{0, 0},
+			},
+			want: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := dotProduct(tt.args.vectorA, tt.args.vectorB); got != tt.want {
+				t.Errorf("dotProduct() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
