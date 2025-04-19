@@ -2323,7 +2323,7 @@ func TestGetMatrixSpan(t *testing.T) {
 	}
 }
 
-func Test_areVectorsLinearlyIndependent(t *testing.T) {
+func Test_areVectorsLinearlyIndependentByElimination(t *testing.T) {
 	type args struct {
 		vectors [][]float64
 	}
@@ -2395,7 +2395,7 @@ func Test_areVectorsLinearlyIndependent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := areVectorsLinearlyIndependent(tt.args.vectors); got != tt.want {
+			if got := areVectorsLinearlyIndependentByGaussianElimination(tt.args.vectors); got != tt.want {
 				t.Errorf("areVectorsLinearlyIndependent() = %v, want %v", got, tt.want)
 			}
 		})
@@ -2552,6 +2552,74 @@ func Test_dotProduct(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := dotProduct(tt.args.vectorA, tt.args.vectorB); got != tt.want {
 				t.Errorf("dotProduct() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_areVectorsLinearlyIndependentByCauchySchwarz(t *testing.T) {
+	type args struct {
+		vectorA []float64
+		vectorB []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "empty vectors",
+			args: args{
+				vectorA: []float64{},
+				vectorB: []float64{},
+			},
+			want: true,
+		},
+		{
+			name: "identity matrix",
+			args: args{
+				vectorA: []float64{1, 0},
+				vectorB: []float64{0, 1},
+			},
+			want: true,
+		},
+		{
+			name: "not independent, same vector",
+			args: args{
+				vectorA: []float64{1, 1},
+				vectorB: []float64{1, 1},
+			},
+			want: false,
+		},
+		{
+			name: "not independent, scalar multiplied",
+			args: args{
+				vectorA: []float64{1, 1},
+				vectorB: []float64{5, 5},
+			},
+			want: false,
+		},
+		{
+			name: "example 1",
+			args: args{
+				vectorA: []float64{3, 4},
+				vectorB: []float64{-6, -8},
+			},
+			want: false,
+		},
+		{
+			name: "identity matrix",
+			args: args{
+				vectorA: GenerateIdentityMatrix(100)[0],
+				vectorB: GenerateIdentityMatrix(100)[0],
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := areVectorsLinearlyIndependentByCauchySchwarz(tt.args.vectorA, tt.args.vectorB); got != tt.want {
+				t.Errorf("areVectorsLinearlyIndependentByCauchySchwarz() = %v, want %v", got, tt.want)
 			}
 		})
 	}

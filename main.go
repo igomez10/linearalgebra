@@ -501,7 +501,9 @@ func GetMatrixSpan(matrix [][]float64) int {
 	return counter
 }
 
-func areVectorsLinearlyIndependent(vectors [][]float64) bool {
+// verify if vectors are linearly independant by checking if we get the
+// identity matrix when doing gaussian elimination
+func areVectorsLinearlyIndependentByGaussianElimination(vectors [][]float64) bool {
 	if len(vectors) == 0 {
 		return true
 	}
@@ -520,6 +522,23 @@ func areVectorsLinearlyIndependent(vectors [][]float64) bool {
 	rref := ToRowEchelonForm(vectors)
 	isIdentity := areMatricesEqual(rref, GenerateIdentityMatrix(len(rref)))
 	return isIdentity
+}
+
+// verify if vectors are linearly independant by checking if
+// when doing dot product of two vectors, we get that the absolute
+// value of the dot product is **equal** to the multiplication of both vectors length
+func areVectorsLinearlyIndependentByCauchySchwarz(vectorA, vectorB []float64) bool {
+	if len(vectorA) == 0 && len(vectorB) == 0 {
+		return true
+	}
+
+	resDotProduct := dotProduct(vectorA, vectorB)
+
+	if nearlyEqual(math.Abs(resDotProduct), GetVectorLength(vectorA)*GetVectorLength(vectorB), 3) {
+		return false
+	}
+
+	return true
 }
 
 func areMatricesEqual(matrixA, matrixB [][]float64) bool {
