@@ -281,15 +281,16 @@ func MultiplyMatrixByScalar(matrix [][]float64, scalar float64) [][]float64 {
 }
 
 func AddRowToRow(matrix [][]float64, rowToAdd []float64, rowIndex int) [][]float64 {
-	if rowIndex < 0 || rowIndex >= len(matrix) || len(matrix[0]) != len(rowToAdd) {
+	copiedMatrix := copyMatrix(matrix)
+	if rowIndex < 0 || rowIndex >= len(copiedMatrix) || len(copiedMatrix[0]) != len(rowToAdd) {
 		panic("invalid change")
 	}
 
-	for i := range matrix[rowIndex] {
-		matrix[rowIndex][i] += rowToAdd[i]
+	for i := range copiedMatrix[rowIndex] {
+		copiedMatrix[rowIndex][i] += rowToAdd[i]
 	}
 
-	return matrix
+	return copiedMatrix
 }
 
 // GetPivotEntries return the list of indexes where the pivot entries are located
@@ -590,4 +591,19 @@ func dotProduct(vectorA, vectorB []float64) float64 {
 	}
 
 	return res
+}
+
+// verify if vectors are linearly independant by vector triangular inequality
+// if  || u + v || == ||u|| + ||v|| then  u v linearly dependent
+func areVectorsLinearlyIndependentByTriangularInequality(vectorA, vectorB []float64) bool {
+	if len(vectorA) == 0 && len(vectorB) == 0 {
+		return true
+	}
+
+	summedVector := AddRowToRow([][]float64{vectorA}, vectorB, 0)[0]
+	if nearlyEqual(GetVectorLength(summedVector), GetVectorLength(vectorA)+GetVectorLength(vectorB), 3) {
+		return false
+	}
+
+	return true
 }

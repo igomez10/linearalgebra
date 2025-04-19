@@ -2624,3 +2624,71 @@ func Test_areVectorsLinearlyIndependentByCauchySchwarz(t *testing.T) {
 		})
 	}
 }
+
+func Test_areVectorsLinearlyIndependentByTriangularInequality(t *testing.T) {
+	type args struct {
+		vectorA []float64
+		vectorB []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "empty vector",
+			args: args{
+				vectorA: []float64{},
+				vectorB: []float64{},
+			},
+			want: true,
+		},
+		{
+			name: "1 dimension",
+			args: args{
+				vectorA: []float64{1},
+				vectorB: []float64{1},
+			},
+			want: false,
+		},
+		{
+			name: "identity matrix",
+			args: args{
+				vectorA: []float64{1, 0},
+				vectorB: []float64{0, 1},
+			},
+			want: true,
+		},
+		{
+			name: "scalar multiplication",
+			args: args{
+				vectorA: []float64{1, 0, 0},
+				vectorB: []float64{5, 0, 0},
+			},
+			want: false,
+		},
+		{
+			name: "same vector summed",
+			args: args{
+				vectorA: []float64{1, 2, 3},
+				vectorB: []float64{2, 4, 6},
+			},
+			want: false,
+		},
+		{
+			name: "linearly independent in 5 dimensions",
+			args: args{
+				vectorA: []float64{1, 0, 0, 0, 0},
+				vectorB: []float64{0, 0, 1, 0, 0},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := areVectorsLinearlyIndependentByTriangularInequality(tt.args.vectorA, tt.args.vectorB); got != tt.want {
+				t.Errorf("areVectorsLinearlyIndependentByTriangularInequality() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
