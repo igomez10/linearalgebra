@@ -1,8 +1,12 @@
 package linearalgebra
 
 import (
+	"bufio"
+	"fmt"
+	"io"
 	"math"
 	"sort"
+	"strconv"
 )
 
 // TODO
@@ -606,4 +610,57 @@ func areVectorsLinearlyIndependentByTriangularInequality(vectorA, vectorB []floa
 	}
 
 	return true
+}
+
+func SaveMatrix(matrix [][]float64, out io.Writer) error {
+	for _, row := range matrix {
+		for j, value := range row {
+			if j > 0 {
+				fmt.Fprint(out, " ")
+			}
+			fmt.Fprintf(out, "%v", value)
+		}
+		// if i < len(matrix)-1 {
+		fmt.Fprintf(out, " ")
+		fmt.Fprintln(out)
+		// }
+	}
+	return nil
+}
+
+func LoadMatrix(input io.Reader) ([][]float64, error) {
+	reader := bufio.NewReader(input)
+	matrix := [][]float64{}
+	reachedEnd := false
+	for !reachedEnd {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			switch err {
+			case io.EOF:
+				reachedEnd = true
+			default:
+				return [][]float64{}, err
+			}
+		}
+
+		row := []float64{}
+		low := 0
+		for high := 0; high < len(line); high++ {
+			if line[high] == ' ' || high == len(line) {
+				component := line[low:high]
+				number, err := strconv.ParseFloat(string(component), 64)
+				if err != nil {
+					return [][]float64{}, err
+				}
+				row = append(row, number)
+				low = high + 1
+			}
+		}
+
+		if len(row) > 0 {
+			matrix = append(matrix, row)
+		}
+	}
+
+	return matrix, nil
 }

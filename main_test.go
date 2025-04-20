@@ -1,7 +1,9 @@
 package linearalgebra
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"math"
 	"reflect"
 	"testing"
@@ -2688,6 +2690,249 @@ func Test_areVectorsLinearlyIndependentByTriangularInequality(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := areVectorsLinearlyIndependentByTriangularInequality(tt.args.vectorA, tt.args.vectorB); got != tt.want {
 				t.Errorf("areVectorsLinearlyIndependentByTriangularInequality() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLoadMatrix(t *testing.T) {
+	type args struct {
+		input io.Reader
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    [][]float64
+		wantErr bool
+	}{
+		{
+			name: "single row",
+			args: args{
+				input: func() io.Reader {
+					buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+					buffer.WriteString("1 0 0 \n")
+					return buffer
+				}(),
+			},
+			want: [][]float64{
+				{1, 0, 0},
+			},
+		},
+		{
+			name: "single number",
+			args: args{
+				input: func() io.Reader {
+					buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+					buffer.WriteString("1 \n")
+					return buffer
+				}(),
+			},
+			want: [][]float64{
+				{1},
+			},
+		},
+		{
+			name: "single number with decimals",
+			args: args{
+				input: func() io.Reader {
+					buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+					buffer.WriteString("1.234 \n")
+					return buffer
+				}(),
+			},
+			want: [][]float64{
+				{1.234},
+			},
+		},
+		{
+			name: "identity matrix",
+			args: args{
+				input: func() io.Reader {
+					buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+					buffer.WriteString("1 0 0 \n")
+					buffer.WriteString("0 1 0 \n")
+					buffer.WriteString("0 0 1 \n")
+					return buffer
+				}(),
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+		},
+		{
+			name: "empty matrix",
+			args: args{
+				input: func() io.Reader {
+					buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+					return buffer
+				}(),
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "more columns than rows",
+			args: args{
+				input: func() io.Reader {
+					buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+					buffer.WriteString("1 0 0 0 \n")
+					buffer.WriteString("0 1 0 0 \n")
+					return buffer
+				}(),
+			},
+			want: [][]float64{
+				{1, 0, 0, 0},
+				{0, 1, 0, 0},
+			},
+		},
+		{
+			name: "big number",
+			args: args{
+				input: func() io.Reader {
+					buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+					buffer.WriteString("11111111 22222222 \n")
+					buffer.WriteString("33333333 44444444 \n")
+					return buffer
+				}(),
+			},
+			want: [][]float64{
+				{11111111, 22222222},
+				{33333333, 44444444},
+			},
+		},
+		{
+			name: "big number with decimals",
+			args: args{
+				input: func() io.Reader {
+					buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+					buffer.WriteString("1111.1111 2222.2222 \n")
+					buffer.WriteString("3333.3333 4444.4444 \n")
+					return buffer
+				}(),
+			},
+			want: [][]float64{
+				{1111.1111, 2222.2222},
+				{3333.3333, 4444.4444},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := LoadMatrix(tt.args.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("LoadMatrix() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("LoadMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSaveMatrix(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantOut string
+		wantErr bool
+	}{
+		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			wantOut: func() string {
+				a := ``
+				return a
+			}(),
+			wantErr: false,
+		},
+		{
+			name: "identity matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			wantOut: func() string {
+				a := "1 0 0 \n0 1 0 \n0 0 1 \n"
+				return a
+			}(),
+			wantErr: false,
+		},
+		{
+			name: "2x3 matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+				},
+			},
+			wantOut: func() string {
+				a := "1 0 0 \n0 1 0 \n"
+				return a
+			}(),
+			wantErr: false,
+		},
+		{
+			name: "with decimals",
+			args: args{
+				matrix: [][]float64{
+					{1.1, 0.1},
+					{0.1, 1.1},
+				},
+			},
+			wantOut: func() string {
+				a := "1.1 0.1 \n0.1 1.1 \n"
+				return a
+			}(),
+			wantErr: false,
+		},
+		{
+			name: "large numbers with decimals",
+			args: args{
+				matrix: [][]float64{
+					{9999.9999, 9999.9999},
+					{9999.9999, 9999.9999},
+				},
+			},
+			wantOut: func() string {
+				a := "9999.9999 9999.9999 \n9999.9999 9999.9999 \n"
+				return a
+			}(),
+			wantErr: false,
+		},
+		{
+			name: "negative numbers",
+			args: args{
+				matrix: [][]float64{
+					{-1.25, -1.99},
+					{1.25, 1.99},
+				},
+			},
+			wantOut: func() string {
+				a := "-1.25 -1.99 \n1.25 1.99 \n"
+				return a
+			}(),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out := &bytes.Buffer{}
+			if err := SaveMatrix(tt.args.matrix, out); (err != nil) != tt.wantErr {
+				t.Errorf("SaveMatrix() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotOut := out.String(); gotOut != tt.wantOut {
+				t.Errorf("SaveMatrix() = %v, want %v", gotOut, tt.wantOut)
 			}
 		})
 	}
