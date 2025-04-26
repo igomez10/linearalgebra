@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -16,10 +15,6 @@ var bgColor = color.RGBA{255, 255, 255, 255}   // white
 
 func main() {
 	const width, height = 1000, 1000
-	const numPoints = 6060
-	const angleStep = 5.0
-	const distance = 500.0 // Camera distance for perspective
-
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	// Fill background
@@ -45,8 +40,8 @@ func main() {
 		}
 	}
 
-	vector := []float64{200, 250}
-	DrawVector(vector, img)
+	vector := []float64{400, 300}
+	Draw2DVector(vector[0], vector[1], img)
 	// Save to file
 	f, err := os.Create("3dplot.png")
 	if err != nil {
@@ -70,19 +65,14 @@ func GetVectorLength(vector []int) float64 {
 	return math.Sqrt(powed)
 }
 
-func DrawVector(vector []float64, img *image.RGBA) {
-	factor := float64(vector[1]) / float64(vector[0])
+func Draw2DVector(x, y float64, img *image.RGBA) {
+	factor := y / x
 	originX := img.Bounds().Max.X / 2
 	originY := img.Bounds().Max.Y / 2
-	targetPoint := []int{
-		originX + int(vector[0]),
-		originY - int(vector[1]),
-	}
-	fmt.Println("Target Point:", targetPoint)
 
-	for i := 0; i < int(vector[0]); i++ {
-		x := originX + i
-		y := originY - int(float64(i)*factor)
+	for i := float64(0); i < x; i++ {
+		x := originX + int(i)
+		y := originY - int(i*factor)
 		img.Set(x, y, redColor)
 	}
 }
