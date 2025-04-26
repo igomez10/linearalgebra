@@ -8,10 +8,10 @@ import (
 	"os"
 )
 
-var redColor = color.RGBA{255, 0, 0, 255}      // red
-var grayColor = color.RGBA{200, 200, 200, 255} // gray
-var pointColor = color.RGBA{0, 0, 0, 255}      // black
-var bgColor = color.RGBA{255, 255, 255, 255}   // white
+var redColor = color.RGBA{255, 0, 0, 255}       // red
+var grayColor = color.RGBA{200, 200, 200, 255}  // gray
+var blackColor = color.RGBA{0, 0, 0, 255}       // black
+var whiteColor = color.RGBA{255, 255, 255, 255} // white
 
 func main() {
 	const width, height = 1000, 1000
@@ -20,14 +20,14 @@ func main() {
 	// Fill background
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			img.Set(x, y, bgColor)
+			img.Set(x, y, whiteColor)
 		}
 	}
 
 	// generate x y z axis
 	for i := 0; i < width; i++ {
-		img.Set(i, height/2, pointColor) // x-axis
-		img.Set(width/2, i, pointColor)  // y-axis
+		img.Set(i, height/2, blackColor) // x-axis
+		img.Set(width/2, i, blackColor)  // y-axis
 	}
 
 	for i := 0; i < width; i += width / 10 {
