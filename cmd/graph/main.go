@@ -42,6 +42,9 @@ func main() {
 
 	vector := []float64{400, 300}
 	Draw2DVector(vector[0], vector[1], img)
+	Draw2DVector(100, 100, img)
+	Draw2DVector(100, -100, img)
+	Draw2DVector(-100, -100, img)
 	// Save to file
 	f, err := os.Create("3dplot.png")
 	if err != nil {
@@ -66,13 +69,14 @@ func GetVectorLength(vector []int) float64 {
 }
 
 func Draw2DVector(x, y float64, img *image.RGBA) {
-	factor := y / x
+	factorY := y / x
+	factorX := x / math.Abs(x)
 	originX := img.Bounds().Max.X / 2
 	originY := img.Bounds().Max.Y / 2
 
-	for i := float64(0); i < x; i++ {
-		x := originX + int(i)
-		y := originY - int(i*factor)
+	for i := float64(0); i < math.Abs(x); i++ {
+		x := originX + int(i*factorX)
+		y := originY - int(i*factorY)
 		img.Set(x, y, redColor)
 	}
 }
