@@ -68,8 +68,17 @@ func GetVectorLength(vector []int) float64 {
 	return math.Sqrt(powed)
 }
 
-func Draw2DVector(x, y float64, img *image.RGBA) {
-	factorY := y / x
+// Draw2DVector draws a 2D vector on the image
+// with the origin at the center of the image.
+func Draw2DVector(x, y float64, img *image.RGBA, color *color.RGBA) {
+	if color == nil {
+		color = &blackColor
+	}
+
+	var factorY float64 = y
+	if x != 0 {
+		factorY = y / x
+	}
 	factorX := x / math.Abs(x)
 	originX := img.Bounds().Max.X / 2
 	originY := img.Bounds().Max.Y / 2
@@ -77,6 +86,49 @@ func Draw2DVector(x, y float64, img *image.RGBA) {
 	for i := float64(0); i < math.Abs(x); i++ {
 		x := originX + int(i*factorX)
 		y := originY - int(i*factorY)
-		img.Set(x, y, redColor)
+		img.Set(x, y, color)
 	}
+}
+
+func Equal(imgA, imgB *image.RGBA) bool {
+	if imgA.Bounds().Max.X != imgB.Bounds().Max.X {
+		return false
+	}
+
+	if imgA.Bounds().Max.Y != imgB.Bounds().Max.Y {
+		return false
+	}
+
+	for i := imgA.Bounds().Min.X; i <= imgA.Bounds().Max.X; i++ {
+		for j := imgB.Bounds().Min.Y; j <= imgB.Bounds().Max.Y; j++ {
+			if !EqualColor(imgA.At(i, j), imgB.At(i, j)) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func EqualColor(colorA, colorB color.Color) bool {
+	redA, greenA, blueA, alphaA := colorA.RGBA()
+	redB, greenB, blueB, alphaB := colorB.RGBA()
+
+	if redA != redB {
+		return false
+	}
+
+	if greenA != greenB {
+		return false
+	}
+
+	if blueA != blueB {
+		return false
+	}
+
+	if alphaA != alphaB {
+		return false
+	}
+
+	return true
 }
