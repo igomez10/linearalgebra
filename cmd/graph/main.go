@@ -24,11 +24,10 @@ func main() {
 		}
 	}
 
-	// generate x y z axis
-	for i := 0; i < width; i++ {
-		img.Set(i, height/2, blackColor) // x-axis
-		img.Set(width/2, i, blackColor)  // y-axis
-	}
+	Draw2DVector(width, 0, img, &blackColor)   // x
+	Draw2DVector(-width, 0, img, &blackColor)  // -x
+	Draw2DVector(0, height, img, &blackColor)  // y
+	Draw2DVector(0, -height, img, &blackColor) // -y
 
 	for i := 0; i < width; i += width / 10 {
 		for j := 0; j < height; j++ {
@@ -40,11 +39,7 @@ func main() {
 		}
 	}
 
-	vector := []float64{400, 300}
-	Draw2DVector(vector[0], vector[1], img)
-	Draw2DVector(100, 100, img)
-	Draw2DVector(100, -100, img)
-	Draw2DVector(-100, -100, img)
+	Draw2DVector(100, 100, img, &redColor)
 	// Save to file
 	f, err := os.Create("3dplot.png")
 	if err != nil {
@@ -75,19 +70,35 @@ func Draw2DVector(x, y float64, img *image.RGBA, color *color.RGBA) {
 		color = &blackColor
 	}
 
-	var factorY float64 = y
+	var factorY float64
 	if x != 0 {
-		factorY = y / x
+		factorY = y / math.Abs(x)
+	} else {
+		factorY = y / math.Abs(y)
 	}
-	factorX := x / math.Abs(x)
+
+	var factorX float64
+	if x != 0 {
+		factorX = x / math.Abs(x)
+	} else {
+		factorX = 0
+	}
+
 	originX := img.Bounds().Max.X / 2
 	originY := img.Bounds().Max.Y / 2
 
-	for i := float64(0); i < math.Abs(x); i++ {
+	for i := float64(0); i <= Max(math.Abs(x), math.Abs(y)); i++ {
 		x := originX + int(i*factorX)
 		y := originY - int(i*factorY)
 		img.Set(x, y, color)
 	}
+}
+
+func Max(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func Equal(imgA, imgB *image.RGBA) bool {
