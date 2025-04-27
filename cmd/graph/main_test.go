@@ -16,28 +16,129 @@ func TestDraw2DVector(t *testing.T) {
 	tests := []struct {
 		name   string
 		args   args
-		expect func(*image.RGBA) error
+		expect func() *image.RGBA
 	}{
 		{
-			name: "simple case x=1 y=1",
+			name: "set origin to black",
 			args: args{
-				x:     1,
-				y:     1,
+				x:     0,
+				y:     0,
 				img:   image.NewRGBA(image.Rect(0, 0, 1, 1)),
 				color: &blackColor,
 			},
-			expect: func(img *image.RGBA) error {
-				img.Set(0, 1, whiteColor)
-				img.Set(1, 0, whiteColor)
+			expect: func() *image.RGBA {
+				img := image.NewRGBA(image.Rect(0, 0, 1, 1))
 				img.Set(0, 0, blackColor)
-				img.Set(1, 1, blackColor)
-				return nil
+				return img
+			},
+		},
+		{
+			name: "x=1 y=1",
+			args: args{
+				x:     1,
+				y:     1,
+				img:   image.NewRGBA(image.Rect(0, 0, 100, 100)),
+				color: &blackColor,
+			},
+			expect: func() *image.RGBA {
+				img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+
+				originX := img.Bounds().Max.X / 2
+				originY := img.Bounds().Max.Y / 2
+
+				img.Set(originX, originY, blackColor)
+				img.Set(originX+1, originY-1, blackColor)
+				return img
+			},
+		},
+		{
+			name: "x=2 y=2",
+			args: args{
+				x:     2,
+				y:     2,
+				img:   image.NewRGBA(image.Rect(0, 0, 100, 100)),
+				color: &blackColor,
+			},
+			expect: func() *image.RGBA {
+				img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+
+				originX := img.Bounds().Max.X / 2
+				originY := img.Bounds().Max.Y / 2
+
+				img.Set(originX, originY, blackColor)
+				img.Set(originX+1, originY-1, blackColor)
+				img.Set(originX+2, originY-2, blackColor)
+				return img
+			},
+		},
+		{
+			name: "x=5 y=5",
+			args: args{
+				x:     5,
+				y:     5,
+				img:   image.NewRGBA(image.Rect(0, 0, 100, 100)),
+				color: &blackColor,
+			},
+			expect: func() *image.RGBA {
+				img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+
+				originX := img.Bounds().Max.X / 2
+				originY := img.Bounds().Max.Y / 2
+
+				img.Set(originX, originY, blackColor)
+				img.Set(originX+1, originY-1, blackColor)
+				img.Set(originX+2, originY-2, blackColor)
+				img.Set(originX+3, originY-3, blackColor)
+				img.Set(originX+4, originY-4, blackColor)
+				img.Set(originX+5, originY-5, blackColor)
+				return img
+			},
+		},
+		{
+			name: "x=-1 y=1",
+			args: args{
+				x:     -1,
+				y:     1,
+				img:   image.NewRGBA(image.Rect(0, 0, 100, 100)),
+				color: &blackColor,
+			},
+			expect: func() *image.RGBA {
+				img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+
+				originX := img.Bounds().Max.X / 2
+				originY := img.Bounds().Max.Y / 2
+
+				img.Set(originX, originY, blackColor)
+				img.Set(originX-1, originY-1, blackColor)
+				return img
+			},
+		},
+		{
+			name: "x=1 y=-1",
+			args: args{
+				x:     1,
+				y:     -1,
+				img:   image.NewRGBA(image.Rect(0, 0, 100, 100)),
+				color: &blackColor,
+			},
+			expect: func() *image.RGBA {
+				img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+
+				originX := img.Bounds().Max.X / 2
+				originY := img.Bounds().Max.Y / 2
+
+				img.Set(originX, originY, blackColor)
+				img.Set(originX+1, originY+1, blackColor)
+				return img
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Draw2DVector(tt.args.x, tt.args.y, tt.args.img, tt.args.color)
+			if !Equal(tt.args.img, tt.expect()) {
+				t.Errorf("expected \n%+v \nbut got \n%+v\n", tt.expect(), tt.args.img)
+			}
 		})
 	}
 }
