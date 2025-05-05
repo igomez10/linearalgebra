@@ -1,17 +1,24 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
 	"math"
 	"os"
+
+	"github.com/igomez10/linearalgebra"
 )
 
 var redColor = color.RGBA{255, 0, 0, 255}       // red
 var grayColor = color.RGBA{200, 200, 200, 255}  // gray
 var blackColor = color.RGBA{0, 0, 0, 255}       // black
 var whiteColor = color.RGBA{255, 255, 255, 255} // white
+var blueColor = color.RGBA{0, 0, 255, 255}      // blue
+var yellowColor = color.RGBA{255, 255, 0, 255}  // yellow
+var greenColor = color.RGBA{0, 255, 0, 255}     // green
+var brownColor = color.RGBA{165, 42, 42, 255}   // brown
 
 func main() {
 	const width, height = 1000, 1000
@@ -39,7 +46,15 @@ func main() {
 		}
 	}
 
-	Draw2DVector(100, 100, img, &redColor)
+	vectorA := []float64{100, 100}
+	vectorB := []float64{200, 100}
+	summedVector := linearalgebra.AddMatrices([][]float64{vectorA}, [][]float64{vectorB})[0]
+
+	fmt.Println("vectorA", vectorA)
+	Draw2DVector(vectorA[0], vectorA[1], img, &redColor)
+	Draw2DVector(vectorB[0], vectorB[1], img, &brownColor)
+	Draw2DVector(summedVector[0], summedVector[1], img, &blackColor)
+
 	// Save to file
 	f, err := os.Create("3dplot.png")
 	if err != nil {

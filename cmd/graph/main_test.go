@@ -243,6 +243,26 @@ func TestDraw2DVector(t *testing.T) {
 				return img
 			},
 		},
+		{
+			name: "x=1 y=2",
+			args: args{
+				x:     1,
+				y:     2,
+				img:   image.NewRGBA(image.Rect(0, 0, 100, 100)),
+				color: &blackColor,
+			},
+			expect: func() *image.RGBA {
+				img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+
+				originX := img.Bounds().Max.X / 2
+				originY := img.Bounds().Max.Y / 2
+
+				img.Set(originX, originY, blackColor)
+				img.Set(originX+1, originY-2, blackColor)
+				img.Set(originX+2, originY-4, blackColor)
+				return img
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
