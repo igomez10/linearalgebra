@@ -2985,6 +2985,22 @@ func TestGetAngleBetweenVectors(t *testing.T) {
 			},
 			want: 130.601,
 		},
+		{
+			name: "example 2",
+			args: args{
+				vectorA: []float64{2, 0, -1},
+				vectorB: []float64{-1, 4, 2},
+			},
+			want: 112.976,
+		},
+		{
+			name: "example 3",
+			args: args{
+				vectorA: []float64{1, -3, 1},
+				vectorB: []float64{0, 6, -2},
+			},
+			want: 162.451,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
