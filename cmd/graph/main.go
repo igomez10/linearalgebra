@@ -47,13 +47,16 @@ func main() {
 	}
 
 	vectorA := []float64{100, 100}
-	vectorB := []float64{200, 100}
+	vectorB := []float64{100, 200}
 	summedVector := linearalgebra.AddMatrices([][]float64{vectorA}, [][]float64{vectorB})[0]
 
 	fmt.Println("vectorA", vectorA)
 	Draw2DVector(vectorA[0], vectorA[1], img, &redColor)
 	Draw2DVector(vectorB[0], vectorB[1], img, &brownColor)
 	Draw2DVector(summedVector[0], summedVector[1], img, &blackColor)
+
+	fmt.Println("summed vector ", summedVector)
+	fmt.Println("the angle between vector A and B is ", linearalgebra.GetAngleBetweenVectors(vectorA, vectorB))
 
 	// Save to file
 	f, err := os.Create("3dplot.png")
@@ -85,27 +88,32 @@ func Draw2DVector(x, y float64, img *image.RGBA, color *color.RGBA) {
 		color = &blackColor
 	}
 
-	var factorY float64
-	if x != 0 {
-		factorY = y / math.Abs(x)
-	} else {
-		factorY = y / math.Abs(y)
-	}
+	// var factorY float64
+	// if x != 0 {
+	// 	factorY = y / math.Abs(x)
+	// } else {
+	// 	factorY = y / math.Abs(y)
+	// }
 
-	var factorX float64
-	if x != 0 {
-		factorX = x / math.Abs(x)
-	} else {
-		factorX = 0
-	}
+	// var factorX float64
+	// if x != 0 {
+	// 	factorX = x / math.Abs(x)
+	// } else {
+	// 	factorX = 0
+	// }
 
 	originX := img.Bounds().Max.X / 2
 	originY := img.Bounds().Max.Y / 2
 
-	for i := float64(0); i <= Max(math.Abs(x), math.Abs(y)); i++ {
-		x := originX + int(i*factorX)
-		y := originY - int(i*factorY)
-		img.Set(x, y, color)
+	// for i := float64(0); i <= Max(math.Abs(x), math.Abs(y)); i++ {
+	// 	x := originX + int(i*factorX)
+	// 	y := originY - int(i*factorY)
+	// 	img.Set(x, y, color)
+	// }
+
+	points := BresenhamLine(originX, originY, originX+int(x), originY-int(y))
+	for i := range points {
+		img.Set(points[i][0], points[i][1], color)
 	}
 }
 
@@ -157,4 +165,39 @@ func EqualColor(colorA, colorB color.Color) bool {
 	}
 
 	return true
+}
+
+func BresenhamLine(x0, y0, x1, y1 int) [][]int {
+	points := [][]int{}
+	dx := int(math.Abs(float64(x1 - x0)))
+	dy := int(math.Abs(float64(y1 - y0)))
+
+	sx := 1
+	if x0 > x1 {
+		sx = -1
+	}
+	sy := 1
+	if y0 > y1 {
+		sy = -1
+	}
+
+	err := dx - dy
+
+	for {
+		points = append(points, []int{x0, y0})
+		if x0 == x1 && y0 == y1 {
+			break
+		}
+		e2 := 2 * err
+		if e2 > -dy {
+			err -= dy
+			x0 += sx
+		}
+		if e2 < dx {
+			err += dx
+			y0 += sy
+		}
+	}
+
+	return points
 }

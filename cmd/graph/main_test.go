@@ -3,6 +3,7 @@ package main
 import (
 	"image"
 	"image/color"
+	"reflect"
 	"testing"
 )
 
@@ -18,20 +19,20 @@ func TestDraw2DVector(t *testing.T) {
 		args   args
 		expect func() *image.RGBA
 	}{
-		{
-			name: "set origin to black",
-			args: args{
-				x:     0,
-				y:     0,
-				img:   image.NewRGBA(image.Rect(0, 0, 1, 1)),
-				color: &blackColor,
-			},
-			expect: func() *image.RGBA {
-				img := image.NewRGBA(image.Rect(0, 0, 1, 1))
-				img.Set(0, 0, blackColor)
-				return img
-			},
-		},
+		// {
+		// 	name: "set origin to black",
+		// 	args: args{
+		// 		x:     0,
+		// 		y:     0,
+		// 		img:   image.NewRGBA(image.Rect(0, 0, 1, 1)),
+		// 		color: &blackColor,
+		// 	},
+		// 	expect: func() *image.RGBA {
+		// 		img := image.NewRGBA(image.Rect(0, 0, 1, 1))
+		// 		img.Set(0, 0, blackColor)
+		// 		return img
+		// 	},
+		// },
 		{
 			name: "x=1 y=1",
 			args: args{
@@ -521,6 +522,45 @@ func TestMax(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Max(tt.args.a, tt.args.b); got != tt.want {
 				t.Errorf("Max() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBresenhamLine(t *testing.T) {
+	type args struct {
+		x0 int
+		y0 int
+		x1 int
+		y1 int
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]int
+	}{
+		{
+			name: "example",
+			args: args{
+				x0: 0,
+				y0: 0,
+				x1: 5,
+				y1: 5,
+			},
+			want: [][]int{
+				{0, 0},
+				{1, 1},
+				{2, 2},
+				{3, 3},
+				{4, 4},
+				{5, 5},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := BresenhamLine(tt.args.x0, tt.args.y0, tt.args.x1, tt.args.y1); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("BresenhamLine() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -1964,6 +1964,15 @@ func Test_nearlyEqual(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "exactly equal",
+			args: args{
+				a:        float64(5),
+				b:        float64(5),
+				decimals: 10,
+			},
+			want: true,
+		},
+		{
 			name: "not equal",
 			args: args{
 				a:        float64(1),
@@ -2011,7 +2020,7 @@ func Test_nearlyEqual(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := nearlyEqual(tt.args.a, tt.args.b, tt.args.decimals); got != tt.want {
+			if got := NearlyEqual(tt.args.a, tt.args.b, tt.args.decimals); got != tt.want {
 				t.Errorf("nearlyEqual() = %v, want %v", got, tt.want)
 			}
 		})
@@ -2552,7 +2561,7 @@ func Test_dotProduct(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := dotProduct(tt.args.vectorA, tt.args.vectorB); got != tt.want {
+			if got := DotProduct(tt.args.vectorA, tt.args.vectorB); got != tt.want {
 				t.Errorf("dotProduct() = %v, want %v", got, tt.want)
 			}
 		})
@@ -2953,6 +2962,141 @@ func BenchmarkSave(b *testing.B) {
 		b.Run(fmt.Sprintf("input_size_%d", v.input), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				GenerateIdentityMatrix(v.input)
+			}
+		})
+	}
+}
+
+func TestGetAngleBetweenVectors(t *testing.T) {
+	type args struct {
+		vectorA []float64
+		vectorB []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			name: "example 1",
+			args: args{
+				vectorA: []float64{2, -1},
+				vectorB: []float64{-1, 4},
+			},
+			want: 130.601,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetAngleBetweenVectors(tt.args.vectorA, tt.args.vectorB); !NearlyEqual(got, tt.want, 3) {
+				t.Errorf("GetAngleBetweenVectors() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_radiansToDegrees(t *testing.T) {
+	type args struct {
+		radians float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			name: "0",
+			args: args{
+				radians: 0,
+			},
+			want: 0,
+		},
+		{
+			name: "30 degrees",
+			args: args{
+				radians: math.Pi / 6,
+			},
+			want: 30,
+		},
+		{
+			name: "45 degrees",
+			args: args{
+				radians: math.Pi / 4,
+			},
+			want: 45,
+		},
+		{
+			name: "90degrees",
+			args: args{
+				radians: math.Pi / 2,
+			},
+			want: 90.0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RadiansToDegrees(tt.args.radians); !NearlyEqual(got, tt.want, 3) {
+				t.Errorf("radiansToDegrees() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAreVectorsOrthogonal(t *testing.T) {
+	type args struct {
+		vectorA []float64
+		vectorB []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "are orthogonal",
+			args: args{
+				vectorA: []float64{1, 0},
+				vectorB: []float64{0, 1},
+			},
+			want: true,
+		},
+		{
+			name: "are parallel",
+			args: args{
+				vectorA: []float64{1, 1},
+				vectorB: []float64{2, 2},
+			},
+			want: false,
+		},
+		{
+			name: "3 dimensions",
+			args: args{
+				vectorA: []float64{1, 0, 0},
+				vectorB: []float64{0, 1, 0},
+			},
+			want: true,
+		},
+		{
+			name: "3 dimensions not all 0",
+			args: args{
+				vectorA: []float64{1, 0, 0},
+				vectorB: []float64{0, 1, 1},
+			},
+			want: true,
+		},
+		{
+			name: "one vector is origin",
+			args: args{
+				vectorA: []float64{1, 1, 1},
+				vectorB: []float64{0, 0, 0},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AreVectorsOrthogonal(tt.args.vectorA, tt.args.vectorB); got != tt.want {
+				t.Errorf("AreVectorsOrthogonal() = %v, want %v", got, tt.want)
 			}
 		})
 	}

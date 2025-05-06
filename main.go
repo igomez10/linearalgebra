@@ -386,7 +386,7 @@ func IsRowEchelonForm(matrix [][]float64) bool {
 }
 
 // used to compare floats
-func nearlyEqual(a, b float64, decimals int) bool {
+func NearlyEqual(a, b float64, decimals int) bool {
 	if a == b {
 		return true
 	}
@@ -429,7 +429,7 @@ func allPivotEntriesAreRightOfPivotbove(matrix [][]float64) bool {
 	currentPivot := []int{-1, -1}
 	for i := 0; i < len(matrix); i++ {
 		for j := 0; j < len(matrix[i]); j++ {
-			if !nearlyEqual(matrix[i][j], float64(0), 3) {
+			if !NearlyEqual(matrix[i][j], float64(0), 3) {
 				if j <= currentPivot[1] {
 					return false
 				}
@@ -537,9 +537,9 @@ func areVectorsLinearlyIndependentByCauchySchwarz(vectorA, vectorB []float64) bo
 		return true
 	}
 
-	resDotProduct := dotProduct(vectorA, vectorB)
+	resDotProduct := DotProduct(vectorA, vectorB)
 
-	if nearlyEqual(math.Abs(resDotProduct), GetVectorLength(vectorA)*GetVectorLength(vectorB), 3) {
+	if NearlyEqual(math.Abs(resDotProduct), GetVectorLength(vectorA)*GetVectorLength(vectorB), 3) {
 		return false
 	}
 
@@ -584,7 +584,7 @@ func areMatricesEqual(matrixA, matrixB [][]float64) bool {
 	return true
 }
 
-func dotProduct(vectorA, vectorB []float64) float64 {
+func DotProduct(vectorA, vectorB []float64) float64 {
 	if len(vectorA) != len(vectorB) {
 		panic("illegal operation")
 	}
@@ -605,7 +605,7 @@ func areVectorsLinearlyIndependentByTriangularInequality(vectorA, vectorB []floa
 	}
 
 	summedVector := AddRowToRow([][]float64{vectorA}, vectorB, 0)[0]
-	if nearlyEqual(GetVectorLength(summedVector), GetVectorLength(vectorA)+GetVectorLength(vectorB), 3) {
+	if NearlyEqual(GetVectorLength(summedVector), GetVectorLength(vectorA)+GetVectorLength(vectorB), 3) {
 		return false
 	}
 
@@ -663,4 +663,27 @@ func LoadMatrix(input io.Reader) ([][]float64, error) {
 	}
 
 	return matrix, nil
+}
+
+// GetAngleBetweenVectors returns the angle between two vectors by
+// using the following formula
+// dotProduct(vectorA  vectorB) = length(vectorA) * length(vectorB)  * Cos(angle)
+func GetAngleBetweenVectors(vectorA, vectorB []float64) float64 {
+	resDotProduct := DotProduct(vectorA, vectorB)
+	resLength := (GetVectorLength(vectorA) * GetVectorLength(vectorB))
+
+	angleInRadians := math.Acos(resDotProduct / resLength)
+	return RadiansToDegrees(angleInRadians)
+}
+
+func RadiansToDegrees(radians float64) float64 {
+	return radians * (180 / math.Pi)
+}
+
+func AreVectorsOrthogonal(vectorA, vectorB []float64) bool {
+	if DotProduct(vectorA, vectorB) == 0 {
+		return true
+	}
+
+	return false
 }
