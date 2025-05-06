@@ -88,32 +88,12 @@ func Draw2DVector(x, y float64, img *image.RGBA, color *color.RGBA) {
 		color = &blackColor
 	}
 
-	// var factorY float64
-	// if x != 0 {
-	// 	factorY = y / math.Abs(x)
-	// } else {
-	// 	factorY = y / math.Abs(y)
-	// }
-
-	// var factorX float64
-	// if x != 0 {
-	// 	factorX = x / math.Abs(x)
-	// } else {
-	// 	factorX = 0
-	// }
-
 	originX := img.Bounds().Max.X / 2
 	originY := img.Bounds().Max.Y / 2
 
-	// for i := float64(0); i <= Max(math.Abs(x), math.Abs(y)); i++ {
-	// 	x := originX + int(i*factorX)
-	// 	y := originY - int(i*factorY)
-	// 	img.Set(x, y, color)
-	// }
-
-	points := BresenhamLine(originX, originY, originX+int(x), originY-int(y))
-	for i := range points {
-		img.Set(points[i][0], points[i][1], color)
+	linePoints := BresenhamLine(originX, originY, originX+int(x), originY-int(y))
+	for i := range linePoints {
+		img.Set(linePoints[i][0], linePoints[i][1], color)
 	}
 }
 
