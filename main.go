@@ -452,6 +452,9 @@ func GetVectorLength(vector []float64) float64 {
 	return math.Sqrt(powed)
 }
 
+// GetUnitVector returns the unit vector for a given vector
+// A unit vector has a length of 1
+// When called on itself it returns the same vector
 func GetUnitVector(vector []float64) []float64 {
 	res := make([]float64, len(vector))
 	copy(res, vector)

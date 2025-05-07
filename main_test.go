@@ -2139,6 +2139,13 @@ func TestGetUnitVector(t *testing.T) {
 			},
 			want: []float64{1 / float64(math.Sqrt(14)), 2 / float64(math.Sqrt(14)), 3 / float64(math.Sqrt(14))},
 		},
+		{
+			name: "calling unit vector on itself should return the same vector",
+			args: args{
+				vector: []float64{1 / float64(math.Sqrt(14)), 2 / float64(math.Sqrt(14)), 3 / float64(math.Sqrt(14))},
+			},
+			want: []float64{1 / float64(math.Sqrt(14)), 2 / float64(math.Sqrt(14)), 3 / float64(math.Sqrt(14))},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
