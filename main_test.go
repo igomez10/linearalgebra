@@ -3171,3 +3171,256 @@ func TestIsUnitVector(t *testing.T) {
 		})
 	}
 }
+
+func TestGetMatrixDeterminant(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			name: "single field",
+			args: args{
+				matrix: [][]float64{
+					{5},
+				},
+			},
+			want: 5,
+		},
+		{
+			name: "example 0",
+			args: args{
+				matrix: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+			},
+			want: -2,
+		},
+		{
+			name: "example 0.1",
+			args: args{
+				matrix: [][]float64{
+					{6, 1, 1},
+					{4, -2, 5},
+					{2, 8, 7},
+				},
+			},
+			want: -306,
+		},
+		{
+			name: "example 1",
+			args: args{
+				matrix: [][]float64{
+					{1, 2},
+					{0, 1},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "2x2 identity",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 1},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "3x3",
+			args: args{
+				matrix: [][]float64{
+					{1, 3, 7},
+					{0, 2, 0},
+					{-2, 0, -1},
+				},
+			},
+			want: 26,
+		},
+		{
+			name: "nxn",
+			args: args{
+				matrix: [][]float64{
+					{1, 3, 7},
+					{0, 2, 0},
+					{-2, 0, -1},
+				},
+			},
+			want: 26,
+		},
+		{
+			name: "4x4",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3, 4},
+					{5, 6, 7, 8},
+					{9, 10, 11, 12},
+					{13, 14, 15, 16},
+				},
+			},
+			want: 0,
+		},
+		{
+			name: "5x5",
+			args: args{
+				matrix: [][]float64{
+					{2, 0, 1, 3, 0},
+					{1, -1, 2, 1, 0},
+					{3, 2, 0, -2, 1},
+					{4, 1, -3, 0, 2},
+					{5, 2, 1, 4, 3},
+				},
+			},
+			want: 183,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetDeterminant(tt.args.matrix); got != tt.want {
+				t.Errorf("GetMatrixDeterminant() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetMinor(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+		i      int
+		j      int
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "identity matrix 3x3",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+				i: 0,
+				j: 0,
+			},
+			want: [][]float64{
+				{1, 0},
+				{0, 1},
+			},
+		},
+		{
+			name: "m01 columns are split",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+				i: 0,
+				j: 1,
+			},
+			want: [][]float64{
+				{0, 0},
+				{0, 1},
+			},
+		},
+		{
+			name: "get m 3 dimensions in a 4x4 matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0, 0},
+					{0, 1, 0, 0},
+					{0, 0, 1, 0},
+					{0, 0, 0, 1},
+				},
+				i: 0,
+				j: 0,
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetMinor(tt.args.matrix, tt.args.i, tt.args.j)
+			if !areMatricesEqual(got, tt.want) {
+				t.Errorf("expected %+v, got %+v", tt.want, tt.args.matrix)
+			}
+		})
+	}
+}
+
+func TestIsMatrixSquare(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: true,
+		},
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "identity matrix i2",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "single 2 dimension row",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "2 columns single field",
+			args: args{
+				matrix: [][]float64{
+					{1},
+					{1},
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsMatrixSquare(tt.args.matrix); got != tt.want {
+				t.Errorf("IsMatrixSquare() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+

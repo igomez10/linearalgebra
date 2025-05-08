@@ -713,3 +713,92 @@ func AreVectorsOrthogonal(vectors ...[]float64) bool {
 
 	return true
 }
+
+// GetMinor returns the minor matrix, used in getting the determinant
+// i j is used as the row and column to exlude, basically the starting point, 0 indexed
+func GetMinor(matrix [][]float64, i, j int) [][]float64 {
+	if i > len(matrix) || j > len(matrix[i]) {
+		panic("invalid i j ")
+	}
+
+	// traverse matrix, create rows and columns with fields that are
+	minor := [][]float64{}
+	for ci := range matrix {
+		if ci == i {
+			continue
+		}
+
+		newRow := []float64{}
+		for cj := range matrix[ci] {
+			if cj == j {
+				continue
+			}
+
+			newRow = append(newRow, matrix[ci][cj])
+		}
+
+		minor = append(minor, newRow)
+	}
+
+	return minor
+}
+
+// GetDeterminant of a given matrix
+func GetDeterminant(matrix [][]float64) float64 {
+	if !IsMatrixSquare(matrix) {
+		panic("cannot calculate determinant of non square matrix")
+	}
+
+	// case matrix is empty
+	if len(matrix) == 0 {
+		return 0
+	}
+
+	// case matrix has len 1
+	if len(matrix) == 1 {
+		return matrix[0][0]
+	}
+
+	// case matrix has len 2
+	if len(matrix) == 2 {
+		var det float64
+		det += matrix[0][0] * matrix[1][1]
+		det -= matrix[0][1] * matrix[1][0]
+		return det
+	}
+
+	// case matrix has len 3
+	if len(matrix) == 3 {
+		var det float64
+		det += matrix[0][0] * (matrix[1][1]*matrix[2][2] - matrix[1][2]*matrix[2][1])
+		det -= matrix[0][1] * (matrix[1][0]*matrix[2][2] - matrix[1][2]*matrix[2][0])
+		det += matrix[0][2] * (matrix[1][0]*matrix[2][1] - matrix[1][1]*matrix[2][0])
+
+		return det
+	}
+
+	// generic case n>3 with laplace expansion
+	var det float64
+	for col := range matrix[0] {
+		minor := GetMinor(matrix, 0, col)
+		cofactor := math.Pow(-1, float64(col)) * matrix[0][col] * GetDeterminant(minor)
+		det += cofactor
+	}
+
+	return det
+}
+
+func IsMatrixSquare(matrix [][]float64) bool {
+	if len(matrix) == 0 {
+		return true
+	}
+
+	expectedLen := len(matrix)
+	for i := range matrix {
+		if len(matrix[i]) != expectedLen {
+			return false
+		}
+	}
+
+	return true
+}
