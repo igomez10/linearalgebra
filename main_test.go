@@ -3278,6 +3278,17 @@ func TestGetMatrixDeterminant(t *testing.T) {
 			},
 			want: 183,
 		},
+		{
+			name: "dependent rows det is 0",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 1},
+					{2, 2, 2},
+					{3, 3, 3},
+				},
+			},
+			want: 0,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -3424,3 +3435,136 @@ func TestIsMatrixSquare(t *testing.T) {
 	}
 }
 
+func TestIsMatrixInvertible(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: false, // if empty matrix det is 0
+		},
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "identity matrix i2",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "single 2 dimension row",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "2 columns single field",
+			args: args{
+				matrix: [][]float64{
+					{1},
+					{1},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "3x3",
+			args: args{
+				matrix: [][]float64{
+					{1, 3, 7},
+					{0, 2, 0},
+					{-2, 0, -1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "not all rows are indep",
+			args: args{
+				matrix: [][]float64{
+					{1, 1, 1},
+					{2, 2, 2},
+					{3, 3, 3},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "not all columns are indep",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{0, 1, 2},
+					{1, 3, 5},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "3x3",
+			args: args{
+				matrix: [][]float64{
+					{1, 3, 7},
+					{0, 2, 0},
+					{-2, 0, -1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "4x4",
+			args: args{
+				matrix: [][]float64{
+
+					{1, 2, 3, 4},
+					{5, 6, 7, 8},
+					{9, 10, 11, 12},
+					{13, 14, 15, 16},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "5x5",
+			args: args{
+				matrix: [][]float64{
+					{2, 0, 1, 3, 0},
+					{1, -1, 2, 1, 0},
+					{3, 2, 0, -2, 1},
+					{4, 1, -3, 0, 2},
+					{5, 2, 1, 4, 3},
+				},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsMatrixInvertible(tt.args.matrix); got != tt.want {
+				t.Errorf("IsMatrixInvertible() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -802,3 +802,18 @@ func IsMatrixSquare(matrix [][]float64) bool {
 
 	return true
 }
+
+// if determinant is non 0
+func IsMatrixInvertible(matrix [][]float64) bool {
+	if !IsMatrixSquare(matrix) {
+		return false
+	}
+
+	determinant := GetDeterminant(matrix)
+	if determinant == 0 {
+		return false
+	}
+
+	return true
+}
+
