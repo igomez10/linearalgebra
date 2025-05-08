@@ -243,6 +243,10 @@ func IsZeroMatrix(matrix [][]float64) bool {
 	return true
 }
 
+// CanMultiplyMatrices returns true if the
+// number of columns in the first matrix is equal to the number of rows in the second matrix
+// 2x3 3x2 returns true
+// 3x2 3x2 returns false
 func CanMultiplyMatrices(matrixA, matrixB [][]float64) bool {
 	if len(matrixA) == 0 || len(matrixB) == 0 {
 		if len(matrixA) == 0 && len(matrixB) == 0 {
@@ -252,6 +256,7 @@ func CanMultiplyMatrices(matrixA, matrixB [][]float64) bool {
 		return false
 	}
 
+	// check number of columns in A is equal to number of rows in B
 	return len(matrixA[0]) == len(matrixB)
 }
 
@@ -683,13 +688,6 @@ func RadiansToDegrees(radians float64) float64 {
 	return radians * (180 / math.Pi)
 }
 
-func AreVectorsOrthogonal(vectorA, vectorB []float64) bool {
-	if DotProduct(vectorA, vectorB) == 0 {
-		return true
-	}
-	return false
-}
-
 // IsUnitVector returns true if the vector length is 1
 // otherwise it will return false
 func IsUnitVector(vector []float64) bool {
@@ -698,4 +696,20 @@ func IsUnitVector(vector []float64) bool {
 	}
 
 	return false
+}
+
+func AreVectorsOrthogonal(vectors ...[]float64) bool {
+	for i := range vectors {
+		for j := i; j < len(vectors); j++ {
+			if i == j {
+				continue
+			}
+
+			if DotProduct(vectors[i], vectors[j]) != 0 {
+				return false
+			}
+		}
+	}
+
+	return true
 }
