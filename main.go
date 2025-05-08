@@ -817,3 +817,9 @@ func IsMatrixInvertible(matrix [][]float64) bool {
 	return true
 }
 
+func GetMatrixRank(matrix [][]float64) int {
+	reduced := ToRowEchelonForm(matrix)
+	pivots := GetPivotEntries(reduced)
+	return len(pivots)
+}
+

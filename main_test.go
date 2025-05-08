@@ -3568,3 +3568,94 @@ func TestIsMatrixInvertible(t *testing.T) {
 		})
 	}
 }
+
+func TestGetMatrixRank(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: 0,
+		},
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "single item is 0",
+			args: args{
+				matrix: [][]float64{
+					{19},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "single item non 1",
+			args: args{
+				matrix: [][]float64{
+					{19},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "single row multiple columns",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3, 4},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "multiple rows single column",
+			args: args{
+				matrix: [][]float64{
+					{1},
+					{1},
+					{1},
+					{1},
+					{1},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "single row multiple columns but 1 is the last item",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0, 0, 0, 0, 0, 1},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "huge identity matrix",
+			args: args{
+				matrix: GenerateIdentityMatrix(100),
+			},
+			want: 100,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetMatrixRank(tt.args.matrix); got != tt.want {
+				t.Errorf("GetMatrixRank() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
