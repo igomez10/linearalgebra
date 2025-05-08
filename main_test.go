@@ -976,7 +976,7 @@ func TestSwapRows0sToBottom(t *testing.T) {
 	}
 }
 
-func TestToRowEchelonForm(t *testing.T) {
+func TestToRowReducedEchelonForm(t *testing.T) {
 	type args struct {
 		matrix [][]float64
 	}
@@ -1179,10 +1179,25 @@ func TestToRowEchelonForm(t *testing.T) {
 				{0, 0, 0, 1},
 			},
 		},
+		{
+			name: "example 1.8",
+			args: args{
+				matrix: [][]float64{
+					{0, 2, 3},
+					{1, 0, 0},
+					{0, 0, 1},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ToRowEchelonForm(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
+			if got := ToRowReducedEchelonForm(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ToRowEchelonForm() = %v, want %v", got, tt.want)
 			}
 		})

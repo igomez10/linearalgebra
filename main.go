@@ -12,14 +12,14 @@ import (
 // TODO
 // Implement a compiler for matrix manipulation commands
 
-// ToRowEchelonForm returns a new matrix in row echelon form using Gaussian elimination
+// ToRowReducedEchelonForm returns a new matrix in row echelon form using Gaussian elimination
 // Swap the rows so that all rows with all zero entries are on the bottom
 // Swap the rows so that the row with the largest, leftmost nonzero entry is on top.
 // Multiply the top row by a scalar so that top row's leading entry becomes 1.
 // Add/subtract multiples of the top row to the other rows so that all other entries in the column containing the top row's leading entry are all zero.
 // Repeat steps 2-4 for the next leftmost nonzero entry until all the leading entries are 1.
 // Swap the rows so that the leading entry of each nonzero row is to the right of the leading entry of the row above it.
-func ToRowEchelonForm(matrix [][]float64) [][]float64 {
+func ToRowReducedEchelonForm(matrix [][]float64) [][]float64 {
 	// Swap the rows so that all rows with all zero entries are on the bottom
 	matrix = SwapRows0sToBottom(matrix)
 
@@ -478,7 +478,7 @@ func GetUnitVector(vector []float64) []float64 {
 // infinite solutions
 func GetNumberOfSolutions(matrix [][]float64) float64 {
 	matrixCopied := copyMatrix(matrix)
-	matrixCopied = ToRowEchelonForm(matrixCopied)
+	matrixCopied = ToRowReducedEchelonForm(matrixCopied)
 
 	// if in rref the last row is 0s then we have 0 solutions
 	for i := range matrixCopied[len(matrixCopied)-1] {
@@ -497,7 +497,7 @@ func GetNumberOfSolutions(matrix [][]float64) float64 {
 // for Rn we return n
 func GetMatrixSpan(matrix [][]float64) int {
 	copiedMatrix := copyMatrix(matrix)
-	copiedMatrix = ToRowEchelonForm(copiedMatrix)
+	copiedMatrix = ToRowReducedEchelonForm(copiedMatrix)
 
 	// count number of pivots
 
@@ -532,7 +532,7 @@ func areVectorsLinearlyIndependentByGaussianElimination(vectors [][]float64) boo
 		}
 	}
 
-	rref := ToRowEchelonForm(vectors)
+	rref := ToRowReducedEchelonForm(vectors)
 	isIdentity := areMatricesEqual(rref, GenerateIdentityMatrix(len(rref)))
 	return isIdentity
 }
@@ -818,7 +818,7 @@ func IsMatrixInvertible(matrix [][]float64) bool {
 }
 
 func GetMatrixRank(matrix [][]float64) int {
-	reduced := ToRowEchelonForm(matrix)
+	reduced := ToRowReducedEchelonForm(matrix)
 	pivots := GetPivotEntries(reduced)
 	return len(pivots)
 }
