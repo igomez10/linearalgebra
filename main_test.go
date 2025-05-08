@@ -997,6 +997,34 @@ func TestToRowReducedEchelonForm(t *testing.T) {
 			},
 		},
 		{
+			name: "all 0s matrix",
+			args: args{
+				matrix: [][]float64{
+					{0, 0, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: [][]float64{
+				{0, 0, 0},
+				{0, 0, 0},
+				{0, 0, 0},
+			},
+		},
+		{
+			name: "needing swaps",
+			args: args{
+				matrix: [][]float64{
+					{0, 2},
+					{1, 0},
+				},
+			},
+			want: [][]float64{
+				{1, 0},
+				{0, 1},
+			},
+		},
+		{
 			name: "only 1 row mutliplied by scalar",
 			args: args{
 				matrix: [][]float64{
