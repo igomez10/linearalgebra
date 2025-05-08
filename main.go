@@ -687,6 +687,15 @@ func AreVectorsOrthogonal(vectorA, vectorB []float64) bool {
 	if DotProduct(vectorA, vectorB) == 0 {
 		return true
 	}
+	return false
+}
+
+// IsUnitVector returns true if the vector length is 1
+// otherwise it will return false
+func IsUnitVector(vector []float64) bool {
+	if GetVectorLength(vector) == 1 {
+		return true
+	}
 
 	return false
 }

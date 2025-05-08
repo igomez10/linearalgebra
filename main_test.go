@@ -3124,3 +3124,50 @@ func TestAreVectorsOrthogonal(t *testing.T) {
 		})
 	}
 }
+
+func TestIsUnitVector(t *testing.T) {
+	type args struct {
+		vector []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "single field",
+			args: args{
+				vector: []float64{1},
+			},
+			want: true,
+		},
+		{
+			name: "two dimensions",
+			args: args{
+				vector: []float64{0, 1},
+			},
+			want: true,
+		},
+		{
+			name: "three dimensions",
+			args: args{
+				vector: []float64{0, 0, 1},
+			},
+			want: true,
+		},
+		{
+			name: "not unit, two non 0 fields",
+			args: args{
+				vector: []float64{1, 1},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsUnitVector(tt.args.vector); got != tt.want {
+				t.Errorf("IsUnitVector() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
