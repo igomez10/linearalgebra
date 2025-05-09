@@ -3767,3 +3767,82 @@ func TestGetCofactorMatrix(t *testing.T) {
 		})
 	}
 }
+
+func TestTransposeMatrix(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: [][]float64{
+				{1},
+			},
+		},
+		{
+			name: "identity matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 1},
+				},
+			},
+			want: [][]float64{
+				{1, 0},
+				{0, 1},
+			},
+		},
+		{
+			name: "3x3 matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+			},
+			want: [][]float64{
+				{1, 4, 7},
+				{2, 5, 8},
+				{3, 6, 9},
+			},
+		},
+		{
+			name: "2x3 matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+				},
+			},
+			want: [][]float64{
+				{1, 4},
+				{2, 5},
+				{3, 6},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := TransposeMatrix(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TransposeMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

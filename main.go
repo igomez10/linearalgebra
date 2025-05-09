@@ -849,3 +849,21 @@ func GetCofactorMatrix(matrix [][]float64) [][]float64 {
 	return cofactorMatrix
 }
 
+// TransposeMatrix returns the transpose of a given matrix
+// The transpose of a matrix is obtained by swapping the rows and columns in a way that
+// the first row becomes the first column, the second row becomes the second column, and so on
+func TransposeMatrix(matrix [][]float64) [][]float64 {
+	if len(matrix) == 0 {
+		return matrix
+	}
+	newmatrix := [][]float64{}
+	for col := 0; col < len(matrix[0]); col++ {
+		newRow := []float64{}
+		for row := 0; row < len(matrix); row++ {
+			newRow = append(newRow, matrix[row][col])
+		}
+		newmatrix = append(newmatrix, newRow)
+	}
+	return newmatrix
+}
+
