@@ -867,3 +867,11 @@ func TransposeMatrix(matrix [][]float64) [][]float64 {
 	return newmatrix
 }
 
+// GetAdjugateMatrix returns the adjugate matrix of a given matrix
+// The adjugate matrix is the transpose of the cofactor matrix
+// The adjugate matrix is used to calculate the inverse of a matrix
+func GetAdjugateMatrix(matrix [][]float64) [][]float64 {
+	cofactorMatrix := GetCofactorMatrix(matrix)
+	adjugateMatrix := TransposeMatrix(cofactorMatrix)
+	return adjugateMatrix
+}

@@ -3768,6 +3768,78 @@ func TestGetCofactorMatrix(t *testing.T) {
 	}
 }
 
+func TestGetAdjugateMatrix(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: [][]float64{
+				{1},
+			},
+		},
+		{
+			name: "example 0",
+			args: args{
+				matrix: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+			},
+			want: [][]float64{
+				{4, -2},
+				{-3, 1},
+			},
+		},
+		{
+			name: "example 1",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{0, 4, 5},
+					{1, 0, 6},
+				},
+			},
+			want: [][]float64{
+				{24, -12, -2},
+				{5, 3, -5},
+				{-4, 2, 4},
+			},
+		},
+		{
+			name: "identity matrix 5",
+			args: args{
+				matrix: GenerateIdentityMatrix(5),
+			},
+			want: GenerateIdentityMatrix(5),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetAdjugateMatrix(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetAdjugateMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestTransposeMatrix(t *testing.T) {
 	type args struct {
 		matrix [][]float64
