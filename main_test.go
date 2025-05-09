@@ -3702,3 +3702,68 @@ func TestGetMatrixRank(t *testing.T) {
 		})
 	}
 }
+
+func TestGetCofactorMatrix(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: [][]float64{
+				{1},
+			},
+		},
+		{
+			name: "2x2",
+			args: args{
+				matrix: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+			},
+			want: [][]float64{
+				{4, -3},
+				{-2, 1},
+			},
+		},
+		{
+			name: "example 3x3",
+			args: args{
+				matrix: [][]float64{
+					{3, 0, 2},
+					{2, 0, -2},
+					{0, 1, 1},
+				},
+			},
+			want: [][]float64{
+				{2, -2, 2},
+				{2, 3, -3},
+				{0, 10, 0},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetCofactorMatrix(tt.args.matrix); !areMatricesEqual(got, tt.want) {
+				t.Errorf("GetCofactorMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

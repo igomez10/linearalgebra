@@ -823,3 +823,29 @@ func GetMatrixRank(matrix [][]float64) int {
 	return len(pivots)
 }
 
+func GetCofactorMatrix(matrix [][]float64) [][]float64 {
+	if !IsMatrixSquare(matrix) {
+		panic("cannot calculate cofactor of non square matrix")
+	}
+
+	if len(matrix) == 0 {
+		return [][]float64{}
+	}
+	if len(matrix) == 1 {
+		return [][]float64{{1}}
+	}
+
+	cofactorMatrix := [][]float64{}
+	for i := range matrix {
+		newRow := []float64{}
+		for j := range matrix[i] {
+			minor := GetMinor(matrix, i, j)
+			cof := math.Pow(-1, float64(i+1+j+1)) * GetDeterminant(minor)
+			newRow = append(newRow, cof)
+		}
+
+		cofactorMatrix = append(cofactorMatrix, newRow)
+	}
+	return cofactorMatrix
+}
+
