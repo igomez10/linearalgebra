@@ -583,7 +583,7 @@ func areMatricesEqual(matrixA, matrixB [][]float64) bool {
 
 	for i := range matrixA {
 		for j := range matrixA[i] {
-			if matrixA[i][j] != matrixB[i][j] {
+			if !NearlyEqual(matrixA[i][j], matrixB[i][j], 3) {
 				return false
 			}
 		}
@@ -715,7 +715,8 @@ func AreVectorsOrthogonal(vectors ...[]float64) bool {
 }
 
 // GetMinor returns the minor matrix, used in getting the determinant
-// i j is used as the row and column to exlude, basically the starting point, 0 indexed
+// i j is used as the row and column to exlude, basically the row and column
+// that will be excluded
 func GetMinor(matrix [][]float64, i, j int) [][]float64 {
 	if i > len(matrix) || j > len(matrix[i]) {
 		panic("invalid i j ")
@@ -778,6 +779,7 @@ func GetDeterminant(matrix [][]float64) float64 {
 	}
 
 	// generic case n>3 with laplace expansion
+	// we expand one row only
 	var det float64
 	for col := range matrix[0] {
 		minor := GetMinor(matrix, 0, col)
@@ -803,7 +805,7 @@ func IsMatrixSquare(matrix [][]float64) bool {
 	return true
 }
 
-// if determinant is non 0
+// IsMatrixInvertible checks if determinant is non 0
 func IsMatrixInvertible(matrix [][]float64) bool {
 	if !IsMatrixSquare(matrix) {
 		return false
@@ -817,6 +819,7 @@ func IsMatrixInvertible(matrix [][]float64) bool {
 	return true
 }
 
+// GetMatrixRank returns the number of pivots
 func GetMatrixRank(matrix [][]float64) int {
 	reduced := ToRowReducedEchelonForm(matrix)
 	pivots := GetPivotEntries(reduced)

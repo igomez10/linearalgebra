@@ -3332,6 +3332,16 @@ func TestGetMatrixDeterminant(t *testing.T) {
 			},
 			want: 0,
 		},
+		{
+			name: "example quiz",
+			args: args{
+				matrix: [][]float64{
+					{4, -1},
+					{-2, 0},
+				},
+			},
+			want: -2,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
