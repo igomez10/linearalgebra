@@ -826,6 +826,16 @@ func GetMatrixRank(matrix [][]float64) int {
 	return len(pivots)
 }
 
+// The dimension of the column space is equal to the number of linearly independent columns
+func GetColumnSpaceDimension(matrix [][]float64) int {
+	return GetMatrixRank(matrix)
+}
+
+// The dimension of the row space is equal to the number of linearly independent rows
+func GetRowSpaceDimension(matrix [][]float64) int {
+	return GetMatrixRank(matrix)
+}
+
 func GetCofactorMatrix(matrix [][]float64) [][]float64 {
 	if !IsMatrixSquare(matrix) {
 		panic("cannot calculate cofactor of non square matrix")
