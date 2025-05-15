@@ -3928,3 +3928,69 @@ func TestTransposeMatrix(t *testing.T) {
 		})
 	}
 }
+
+func TestGetMatrixNullity(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: 0,
+		},
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: 0,
+		},
+		{
+			name: "single item but is 0",
+			args: args{
+				matrix: [][]float64{
+					{0},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "identity matrix 3x3",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: 0,
+		},
+		{
+			name: "has 2 rows of 0s",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 0},
+					{0, 0, 0},
+					{0, 0, 0},
+				},
+			},
+			want: 2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetMatrixNullity(tt.args.matrix); got != tt.want {
+				t.Errorf("GetMatrixNullity() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

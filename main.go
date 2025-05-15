@@ -888,3 +888,14 @@ func GetAdjugateMatrix(matrix [][]float64) [][]float64 {
 	adjugateMatrix := TransposeMatrix(cofactorMatrix)
 	return adjugateMatrix
 }
+
+func GetMatrixNullity(matrix [][]float64) int {
+	if len(matrix) == 0 {
+		return 0
+	}
+	if len(matrix[0]) == 0 {
+		return 0
+	}
+
+	return len(matrix[0]) - GetMatrixRank(matrix)
+}
