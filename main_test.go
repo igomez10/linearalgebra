@@ -1236,6 +1236,21 @@ func TestToRowReducedEchelonForm(t *testing.T) {
 				{0, 0, 1},
 			},
 		},
+		{
+			name: "example 1.9",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{0, 4, 5},
+					{1, 0, 6},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1913,13 +1928,43 @@ func TestGetEliminationMatrix(t *testing.T) {
 				{float64(-3) / float64(4), float64(-1) / float64(4), -1},
 			},
 		},
+		{
+			name: "example random chatgpt",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{0, 4, 5},
+					{1, 0, 6},
+				},
+			},
+			want: [][]float64{
+				{float64(24) / 22, float64(-12) / 22, float64(-2) / 22},
+				{float64(5) / 22, float64(3) / 22, float64(-5) / 22},
+				{float64(-4) / 22, float64(2) / 22, float64(4) / 22},
+			},
+		},
+		{
+			name: "test simple example online",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 3},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: [][]float64{
+				{1, 0, -3},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			originalMatrix := copyMatrix(tt.args.matrix)
 			got := GetEliminationMatrix(tt.args.matrix)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetEliminationMatrix() = %v, want %v", got, tt.want)
+			if !areMatricesEqual(got, tt.want) {
+				t.Errorf("GetEliminationMatrix() = \n%v\n, want \n%v\n", got, tt.want)
 			}
 
 			// TODO confirm inverse works
@@ -3938,6 +3983,112 @@ func TestTransposeMatrix(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := TransposeMatrix(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("TransposeMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetInverseMatrixByDeterminant(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: [][]float64{
+				{1},
+			},
+		},
+		{
+			name: "identity matrix i2",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 1},
+				},
+			},
+			want: [][]float64{
+				{1, 0},
+				{0, 1},
+			},
+		},
+		{
+			name: "example 1",
+			args: args{
+				matrix: [][]float64{
+					{-3, 4},
+					{2, 5},
+				},
+			},
+			want: [][]float64{
+				{float64(-5) / 23, float64(4) / 23},
+				{float64(2) / 23, float64(3) / 23},
+			},
+		},
+		{
+			name: "example quiz",
+			args: args{
+				matrix: [][]float64{
+					{4, -1},
+					{-2, 0},
+				},
+			},
+			want: [][]float64{
+				{0, -0.5},
+				{-1, -2},
+			},
+		},
+		{
+			name: "example random chatgpt",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{0, 4, 5},
+					{1, 0, 6},
+				},
+			},
+			want: [][]float64{
+				{float64(24) / 22, float64(-12) / 22, float64(-2) / 22},
+				{float64(5) / 22, float64(3) / 22, float64(-5) / 22},
+				{float64(-4) / 22, float64(2) / 22, float64(4) / 22},
+			},
+		},
+		{
+			name: "example random chatgpt-1",
+			args: args{
+				matrix: [][]float64{
+					{1, 0, 3},
+					{0, 1, 0},
+					{0, 0, 1},
+				},
+			},
+			want: [][]float64{
+				{1, 0, -3},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetInverseMatrixByDeterminant(tt.args.matrix)
+			if !areMatricesEqual(got, tt.want) {
+				t.Errorf("GetInverseMatrixByDeterminant() = \n%v\n, want \n%v\n", got, tt.want)
+			}
+
+			// Check the result is the same as by calling GetEliminationMatrix
+			got2 := GetEliminationMatrix(tt.args.matrix)
+			if !areMatricesEqual(got, got2) {
+				t.Errorf("elimination matrix and inverse matrix do not match = \ninversebydet: %v\n, want :\nelimination %v\n", got, got2)
 			}
 		})
 	}

@@ -913,3 +913,21 @@ func GetMatrixNullity(matrix [][]float64) int {
 
 	return len(matrix[0]) - GetMatrixRank(matrix)
 }
+
+// matrix is invertible if there exists an inverse A^-1
+func GetInverseMatrixByDeterminant(matrix [][]float64) [][]float64 {
+	if !IsMatrixSquare(matrix) {
+		panic("cannot calculate inverse of non square matrix")
+	}
+
+	det := GetDeterminant(matrix)
+	if det == 0 {
+		panic("cannot calculate inverse of non invertible matrix")
+	}
+
+	adjMatrix := GetAdjugateMatrix(matrix)
+
+	res := MultiplyMatrixByScalar(adjMatrix, 1/det)
+	return res
+}
+
