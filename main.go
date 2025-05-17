@@ -163,21 +163,27 @@ func GenerateIdentityMatrix(n int) [][]float64 {
 }
 
 func SwapRows0sToBottom(matrix [][]float64) [][]float64 {
-	sort.Slice(matrix, func(i, j int) bool {
-		for x := range matrix[i] {
-			if matrix[i][x] == 0 && matrix[j][x] == 0 {
-				continue
-			}
-
-			if matrix[i][x] != 0 && matrix[j][x] == 0 {
-				return true
+	newMatrix := [][]float64{}
+	rowsOf0s := [][]float64{}
+	rowsOfNon0s := [][]float64{}
+	for i := range matrix {
+		isAll0s := true
+		for j := range matrix[i] {
+			if matrix[i][j] != 0 {
+				rowsOfNon0s = append(rowsOfNon0s, matrix[i])
+				isAll0s = false
+				break
 			}
 		}
+		if isAll0s {
+			rowsOf0s = append(rowsOf0s, matrix[i])
+		}
+	}
 
-		return false
-	})
+	newMatrix = append(newMatrix, rowsOfNon0s...)
+	newMatrix = append(newMatrix, rowsOf0s...)
 
-	return matrix
+	return newMatrix
 }
 
 func SwapRows(matrix [][]float64, i, j int) [][]float64 {
