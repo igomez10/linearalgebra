@@ -836,6 +836,11 @@ func GetRowSpaceDimension(matrix [][]float64) int {
 	return GetMatrixRank(matrix)
 }
 
+// GetCofactorMatrix returns the cofactor matrix for a given matrix.
+// Each element in the cofactor matrix is the determinant of the minor matrix
+// multiplied by (-1) raised to the power of the sum of its row and column indices.
+// The cofactor matrix is used to compute the adjugate (adjoint) matrix and the inverse of a matrix.
+// Individual cofactors (not necessarily the entire matrix) are also used in Laplace expansion to compute the determinant.
 func GetCofactorMatrix(matrix [][]float64) [][]float64 {
 	if !IsMatrixSquare(matrix) {
 		panic("cannot calculate cofactor of non square matrix")
@@ -881,14 +886,17 @@ func TransposeMatrix(matrix [][]float64) [][]float64 {
 }
 
 // GetAdjugateMatrix returns the adjugate matrix of a given matrix
-// The adjugate matrix is the transpose of the cofactor matrix
-// The adjugate matrix is used to calculate the inverse of a matrix
+// The adjugate matrix is the transpose of the cofactor matrix.
+// It is used in the calculation of the inverse of a matrix.
 func GetAdjugateMatrix(matrix [][]float64) [][]float64 {
 	cofactorMatrix := GetCofactorMatrix(matrix)
 	adjugateMatrix := TransposeMatrix(cofactorMatrix)
 	return adjugateMatrix
 }
 
+// GetMatrixNillity returns the number of rows that are not pivot entries
+// in a matrix nxn
+// n = pivot + nullity
 func GetMatrixNullity(matrix [][]float64) int {
 	if len(matrix) == 0 {
 		return 0
