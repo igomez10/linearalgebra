@@ -4159,3 +4159,55 @@ func TestGetMatrixNullity(t *testing.T) {
 		})
 	}
 }
+
+func TestDotProductVectors(t *testing.T) {
+	type args struct {
+		vectorA []float64
+		vectorB []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			name: "single item vector both 0",
+			args: args{
+				vectorA: []float64{0},
+				vectorB: []float64{0},
+			},
+			want: 0,
+		},
+		{
+			name: "single item non 0",
+			args: args{
+				vectorA: []float64{2},
+				vectorB: []float64{3},
+			},
+			want: 6,
+		},
+		{
+			name: "two items idenity matrix is 0 because orthogonal",
+			args: args{
+				vectorA: []float64{1, 0},
+				vectorB: []float64{0, 1},
+			},
+			want: 0,
+		},
+		{
+			name: "two items non idenity matrix",
+			args: args{
+				vectorA: []float64{2, 3},
+				vectorB: []float64{4, 5},
+			},
+			want: 23,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := DotProductVectors(tt.args.vectorA, tt.args.vectorB); got != tt.want {
+				t.Errorf("DotProductVectors() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

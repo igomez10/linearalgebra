@@ -266,6 +266,16 @@ func CanMultiplyMatrices(matrixA, matrixB [][]float64) bool {
 	return len(matrixA[0]) == len(matrixB)
 }
 
+func DotProductVectors(vectorA, vectorB []float64) float64 {
+	rowVectorA := [][]float64{vectorA}
+
+	columnVectorB := [][]float64{}
+	for i := range vectorB {
+		columnVectorB = append(columnVectorB, []float64{vectorB[i]})
+	}
+	return MultiplyMatrices(rowVectorA, columnVectorB)[0][0]
+}
+
 // miltiply matrices will use dot product to multiply two matrices
 func MultiplyMatrices(matrixA, matrixB [][]float64) [][]float64 {
 	if !CanMultiplyMatrices(matrixA, matrixB) {
