@@ -123,7 +123,7 @@ func GetEliminationMatrix(matrix [][]float64) [][]float64 {
 
 	eliminationMatrix := changeMatrices[0]
 	for i := 1; i < len(changeMatrices); i++ {
-		eliminationMatrix = MultiplyMatrices(changeMatrices[i], eliminationMatrix)
+		eliminationMatrix = DotProduct(changeMatrices[i], eliminationMatrix)
 	}
 
 	return eliminationMatrix
@@ -266,6 +266,10 @@ func CanMultiplyMatrices(matrixA, matrixB [][]float64) bool {
 	return len(matrixA[0]) == len(matrixB)
 }
 
+// DotProductVectors will apply dot product to two vectors
+// Since dot product only applies if the dimension of vectors is
+// axb and bxc, we will assume that the vectors are 1xN and Nx1
+// this function will take care of converting the row vector to a column vector
 func DotProductVectors(vectorA, vectorB []float64) float64 {
 	rowVectorA := [][]float64{vectorA}
 
@@ -273,11 +277,12 @@ func DotProductVectors(vectorA, vectorB []float64) float64 {
 	for i := range vectorB {
 		columnVectorB = append(columnVectorB, []float64{vectorB[i]})
 	}
-	return MultiplyMatrices(rowVectorA, columnVectorB)[0][0]
+	return DotProduct(rowVectorA, columnVectorB)[0][0]
 }
 
-// miltiply matrices will use dot product to multiply two matrices
-func MultiplyMatrices(matrixA, matrixB [][]float64) [][]float64 {
+// DotProduct multiply matrices will use dot product to multiply two matrices
+// For DotProduct with vectors use DotProductVectors instead
+func DotProduct(matrixA, matrixB [][]float64) [][]float64 {
 	if !CanMultiplyMatrices(matrixA, matrixB) {
 		panic("invalid multiplication")
 	}
@@ -561,7 +566,7 @@ func areVectorsLinearlyIndependentByCauchySchwarz(vectorA, vectorB []float64) bo
 		return true
 	}
 
-	resDotProduct := DotProduct(vectorA, vectorB)
+	resDotProduct := DotProductVectors(vectorA, vectorB)
 
 	if NearlyEqual(math.Abs(resDotProduct), GetVectorLength(vectorA)*GetVectorLength(vectorB), 3) {
 		return false
@@ -606,19 +611,6 @@ func areMatricesEqual(matrixA, matrixB [][]float64) bool {
 	}
 
 	return true
-}
-
-func DotProduct(vectorA, vectorB []float64) float64 {
-	if len(vectorA) != len(vectorB) {
-		panic("illegal operation")
-	}
-
-	var res float64 = 0
-	for i := range vectorA {
-		res += vectorA[i] * vectorB[i]
-	}
-
-	return res
 }
 
 // verify if vectors are linearly independant by vector triangular inequality
@@ -693,7 +685,7 @@ func LoadMatrix(input io.Reader) ([][]float64, error) {
 // using the following formula
 // dotProduct(vectorA  vectorB) = length(vectorA) * length(vectorB)  * Cos(angle)
 func GetAngleBetweenVectors(vectorA, vectorB []float64) float64 {
-	resDotProduct := DotProduct(vectorA, vectorB)
+	resDotProduct := DotProductVectors(vectorA, vectorB)
 	resLength := (GetVectorLength(vectorA) * GetVectorLength(vectorB))
 
 	angleInRadians := math.Acos(resDotProduct / resLength)
@@ -721,7 +713,7 @@ func AreVectorsOrthogonal(vectors ...[]float64) bool {
 				continue
 			}
 
-			if DotProduct(vectors[i], vectors[j]) != 0 {
+			if DotProductVectors(vectors[i], vectors[j]) != 0 {
 				return false
 			}
 		}

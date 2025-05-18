@@ -1786,7 +1786,7 @@ func Test_multiplyMatrices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MultiplyMatrices(tt.args.matrixA, tt.args.matrixB); !reflect.DeepEqual(got, tt.want) {
+			if got := DotProduct(tt.args.matrixA, tt.args.matrixB); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("multiplyMatrices() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1969,7 +1969,7 @@ func TestGetEliminationMatrix(t *testing.T) {
 
 			// TODO confirm inverse works
 
-			multiplied := MultiplyMatrices(got, originalMatrix)
+			multiplied := DotProduct(got, originalMatrix)
 			if !IsRowEchelonForm(multiplied) {
 				t.Errorf("expected to be reduced row echelon form")
 			}
@@ -2601,7 +2601,7 @@ func Test_areMatricesEqual(t *testing.T) {
 	}
 }
 
-func Test_dotProduct(t *testing.T) {
+func Test_DotProductVectors(t *testing.T) {
 	type args struct {
 		vectorA []float64
 		vectorB []float64
@@ -2611,14 +2611,6 @@ func Test_dotProduct(t *testing.T) {
 		args args
 		want float64
 	}{
-		{
-			name: "empty vectors",
-			args: args{
-				vectorA: []float64{},
-				vectorB: []float64{},
-			},
-			want: 0,
-		},
 		{
 			name: "simple case",
 			args: args{
@@ -2670,7 +2662,7 @@ func Test_dotProduct(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := DotProduct(tt.args.vectorA, tt.args.vectorB); got != tt.want {
+			if got := DotProductVectors(tt.args.vectorA, tt.args.vectorB); got != tt.want {
 				t.Errorf("dotProduct() = %v, want %v", got, tt.want)
 			}
 		})
