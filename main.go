@@ -933,3 +933,33 @@ func GetInverseMatrixByDeterminant(matrix [][]float64) [][]float64 {
 	return res
 }
 
+// CrossProduct returns a vector that is orthogonal to both A and B
+// we calculate it witha determinant, something like a matrix
+/*
+       	| i   j  k |
+   axb=	| a1 a2 a3 |
+       	| b1 b2 b3 |
+
+
+a = [1,0,2]
+b = [-2,1,0]
+
+	 i j k
+	1  0 2
+	-2 1 0
+
+
+*/
+func CrossProduct(vectorA, vectorB []float64) []float64 {
+	if len(vectorA) != 3 || len(vectorB) != 3 {
+		panic("cross product is only defined in 3 dimensions")
+	}
+
+	res := []float64{
+		vectorA[1]*vectorB[2] - vectorA[2]*vectorB[1],
+		-(vectorA[0]*vectorB[2] - vectorA[2]*vectorB[0]),
+		vectorA[0]*vectorB[1] - vectorA[1]*vectorB[0],
+	}
+
+	return res
+}

@@ -4203,3 +4203,55 @@ func TestDotProductVectors(t *testing.T) {
 		})
 	}
 }
+
+func TestCrossProduct(t *testing.T) {
+	type args struct {
+		vectorA []float64
+		vectorB []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want []float64
+	}{
+		{
+			name: "example 0",
+			args: args{
+				vectorA: []float64{1, 0, 2},
+				vectorB: []float64{-2, 1, 0},
+			},
+			want: []float64{-2, -4, 1},
+		},
+		{
+			name: "quiz 0",
+			args: args{
+				vectorA: []float64{1, -1, 1},
+				vectorB: []float64{-2, 1, 2},
+			},
+			want: []float64{-3, -4, -1},
+		},
+		{
+			name: "quiz 1",
+			args: args{
+				vectorA: []float64{4, 2, 0},
+				vectorB: []float64{-1, -3, 1},
+			},
+			want: []float64{2, -4, -10},
+		},
+		{
+			name: "quiz 2",
+			args: args{
+				vectorA: []float64{6, 7, -5},
+				vectorB: []float64{8, 7, -11},
+			},
+			want: []float64{-42, 26, -14},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CrossProduct(tt.args.vectorA, tt.args.vectorB); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CrossProduct() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
