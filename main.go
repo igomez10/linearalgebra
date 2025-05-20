@@ -963,3 +963,41 @@ func CrossProduct(vectorA, vectorB []float64) []float64 {
 
 	return res
 }
+
+// every matrix has these 4 spaces
+// null space
+// column space
+// row space
+// left null space
+
+// multiply matrix by vector
+// will always return a vector, maybe row vector or column vector
+
+// if the only vector that will turn the matrix into the zero vector
+// when multiplied, then it means that the columns are lienarly independent
+func IsVectorInTheNullSpaceOfMatrix(vector []float64, matrix [][]float64) bool {
+	// lets assume we do matrix vector multiplication
+	// A*v
+	// assuming A is mxn
+	// v should be mx1
+	columnVector := TransposeMatrix([][]float64{vector})
+	if !CanMultiplyMatrices(matrix, columnVector) {
+		panic("cannot mulitply this matrix with this vector")
+	}
+
+	// check if we should transpose vector to make it column or row vector
+	resultVector := DotProduct(matrix, columnVector)
+	var response float64 = 0
+	for i := range resultVector {
+		for j := range resultVector[i] {
+			response += resultVector[i][j]
+		}
+	}
+
+	// if after doing dot product and adding values we get 0 then yes
+	if NearlyEqual(response, 0, 3) {
+		return true
+	}
+
+	return false
+}

@@ -4255,3 +4255,105 @@ func TestCrossProduct(t *testing.T) {
 		})
 	}
 }
+
+func TestIsVectorInTheNullSpaceOfMatrix(t *testing.T) {
+	type args struct {
+		vector []float64
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "quiz0",
+			args: args{
+				vector: []float64{-5, 1, 3},
+				matrix: [][]float64{
+					{1, -4, 3},
+					{2, 4, 2},
+					{-1, -5, 0},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "quiz1",
+			args: args{
+				vector: []float64{2, -3, 1},
+				matrix: [][]float64{
+					{-3, 1, 9},
+					{1, 1, 1},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "quiz1.1",
+			args: args{
+				vector: []float64{2, 3, -1},
+				matrix: [][]float64{
+					{-3, 1, 9},
+					{1, 1, 1},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "quiz1.2",
+			args: args{
+				vector: []float64{1, -1, 0},
+				matrix: [][]float64{
+					{-3, 1, 9},
+					{1, 1, 1},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "quiz1.3",
+			args: args{
+				vector: []float64{0, 1, 0},
+				matrix: [][]float64{
+					{-3, 1, 9},
+					{1, 1, 1},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "quiz2.0",
+			args: args{
+				vector: []float64{1, 0, 1, 1},
+				matrix: [][]float64{
+					{5, 3, 1, 5},
+					{-10, -2, 1, -3},
+					{-5, 1, 2, 4},
+					{7, 1, -1, -2},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "quiz2.1",
+			args: args{
+				vector: []float64{-1, 3, -4, 0},
+				matrix: [][]float64{
+					{5, 3, 1, 5},
+					{-10, -2, 1, -3},
+					{-5, 1, 2, 4},
+					{7, 1, -1, -2},
+				},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsVectorInTheNullSpaceOfMatrix(tt.args.vector, tt.args.matrix); got != tt.want {
+				t.Errorf("IsVectorInTheNullSpaceOfMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
