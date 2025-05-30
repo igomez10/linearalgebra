@@ -1002,3 +1002,53 @@ func IsVectorInTheNullSpaceOfMatrix(vector []float64, matrix [][]float64) bool {
 
 	return true
 }
+
+// GetNullSpaceOfMatrix returns the null space of a matrix
+// The null space of a matrix is the set of all vectors v such that A*v = 0
+// It is the solution set of the homogeneous system of linear equations represented by the matrix A.
+// The null space can be found by solving the system of equations represented by the matrix
+func GetNullSpaceOfMatrix(matrix [][]float64) [][]float64 {
+	if len(matrix) == 0 {
+		return [][]float64{}
+	}
+
+	if len(matrix[0]) == 0 {
+		return [][]float64{}
+	}
+
+	// get the row reduced echelon form of the matrix
+	rref := ToRowReducedEchelonForm(matrix)
+
+	// get the pivots entries
+	pivots := GetPivotEntries(rref)
+
+	// create a list of vectors that are in the null space
+	nullSpace := [][]float64{}
+
+	for currentColumnIndex := 0; currentColumnIndex < len(rref[0]); currentColumnIndex++ {
+		// if this column is a pivot column, we skip it
+		isPivotColumn := false
+		for _, currentPivot := range pivots {
+			if currentPivot[1] == currentColumnIndex {
+				isPivotColumn = true
+				break
+			}
+		}
+
+		if isPivotColumn {
+			continue
+		}
+
+		// create a nullSpaceVector that has 0s in all pivot columns and 1 in this column
+		nullSpaceVector := make([]float64, len(rref[0]))
+		nullSpaceVector[currentColumnIndex] = 1
+
+		for _, currentPivot := range pivots {
+			nullSpaceVector[currentPivot[1]] = -rref[currentPivot[0]][currentColumnIndex]
+		}
+
+		nullSpace = append(nullSpace, nullSpaceVector)
+	}
+
+	return nullSpace
+}

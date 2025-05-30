@@ -4357,3 +4357,76 @@ func TestIsVectorInTheNullSpaceOfMatrix(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNullSpaceOfMatrix(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "identity matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 1},
+				},
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "example 0",
+			args: args{
+				matrix: [][]float64{
+					{2, 1, -3},
+					{4, 2, -6},
+					{1, -1, -6},
+				},
+			},
+			want: [][]float64{
+				{3, -3, 1},
+			},
+		},
+		{
+			name: "example 1",
+			args: args{
+				matrix: [][]float64{
+					{1, -2, 1, 3},
+					{-3, 6, -3, -9},
+					{4, -8, 4, 12},
+				},
+			},
+			want: [][]float64{
+				{2, 1, 0, 0},
+				{-1, 0, 1, 0},
+				{-3, 0, 0, 1},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetNullSpaceOfMatrix(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetNullSpaceOfMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
