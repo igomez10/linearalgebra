@@ -516,6 +516,8 @@ func GetNumberOfSolutions(matrix [][]float64) float64 {
 // for R2 we return 2
 // for R3 we return 3
 // for Rn we return n
+// technically the span is all the possible linear combinations of the vectors
+// but returning this in code is not possible
 func GetMatrixSpan(matrix [][]float64) int {
 	copiedMatrix := copyMatrix(matrix)
 	copiedMatrix = ToRowReducedEchelonForm(copiedMatrix)
@@ -621,7 +623,9 @@ func areVectorsLinearlyIndependentByTriangularInequality(vectorA, vectorB []floa
 	}
 
 	summedVector := AddRowToRow([][]float64{vectorA}, vectorB, 0)[0]
-	if NearlyEqual(GetVectorLength(summedVector), GetVectorLength(vectorA)+GetVectorLength(vectorB), 3) {
+	summedVectorLength := GetVectorLength(summedVector)
+	addedLength := GetVectorLength(vectorA) + GetVectorLength(vectorB)
+	if NearlyEqual(summedVectorLength, addedLength, 3) {
 		return false
 	}
 
@@ -706,6 +710,10 @@ func IsUnitVector(vector []float64) bool {
 	return false
 }
 
+// AreVectorsOrthogonal returns true if all vectors are orthogonal
+// Orthogonal vectors are vectors that are perpendicular to each other
+// The dot product of two orthogonal vectors is 0
+// basically DotProduct(vectorA, vectorB) == 0
 func AreVectorsOrthogonal(vectors ...[]float64) bool {
 	for i := range vectors {
 		for j := i; j < len(vectors); j++ {
@@ -828,6 +836,9 @@ func IsMatrixInvertible(matrix [][]float64) bool {
 }
 
 // GetMatrixRank returns the number of pivots
+// the rank of a matrix is the dimension of the span (all possible linear combinations of the vectors)
+// It is equal to the number of linearly independent rows or columns in the matrix.
+// The rank can be found by converting the matrix to row echelon form and counting the number of non-zero rows.
 func GetMatrixRank(matrix [][]float64) int {
 	reduced := ToRowReducedEchelonForm(matrix)
 	pivots := GetPivotEntries(reduced)
@@ -964,17 +975,9 @@ func CrossProduct(vectorA, vectorB []float64) []float64 {
 	return res
 }
 
-// every matrix has these 4 spaces
-// null space
-// column space
-// row space
-// left null space
-
-// multiply matrix by vector
-// will always return a vector, maybe row vector or column vector
-
-// if the only vector that will turn the matrix into the zero vector
-// when multiplied, then it means that the columns are lienarly independent
+// IsVectorInTheNullSpaceOfMatrix checks that
+// dotProduct(A, v) = 0
+// where 0 is a vector of 0s
 func IsVectorInTheNullSpaceOfMatrix(vector []float64, matrix [][]float64) bool {
 	// lets assume we do matrix vector multiplication
 	// A*v
@@ -987,17 +990,15 @@ func IsVectorInTheNullSpaceOfMatrix(vector []float64, matrix [][]float64) bool {
 
 	// check if we should transpose vector to make it column or row vector
 	resultVector := DotProduct(matrix, columnVector)
-	var response float64 = 0
+	if len(resultVector[0]) != 1 {
+		panic("result vector should be a row vector")
+	}
+
 	for i := range resultVector {
-		for j := range resultVector[i] {
-			response += resultVector[i][j]
+		if !NearlyEqual(resultVector[i][0], 0, 3) {
+			return false
 		}
 	}
 
-	// if after doing dot product and adding values we get 0 then yes
-	if NearlyEqual(response, 0, 3) {
-		return true
-	}
-
-	return false
+	return true
 }
