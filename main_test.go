@@ -1251,11 +1251,28 @@ func TestToRowReducedEchelonForm(t *testing.T) {
 				{0, 0, 1},
 			},
 		},
+		{
+			name: "example 1.10",
+			args: args{
+				matrix: [][]float64{
+					{1, -2, 4, -5},
+					{0, 3, 5, 7},
+					{-3, 6, 3, 9},
+					{2, -4, -2, -6},
+				},
+			},
+			want: [][]float64{
+				{1, 0, 0, float64(13) / float64(5)},
+				{0, 1, 0, 3},
+				{0, 0, 1, float64(-2) / float64(5)},
+				{0, 0, 0, 0},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ToRowReducedEchelonForm(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ToRowEchelonForm() = %v, want %v", got, tt.want)
+			if got := ToRowReducedEchelonForm(tt.args.matrix); !areMatricesEqual(got, tt.want) {
+				t.Errorf("ToRowEchelonForm() = \n%v\n, want \n%v\n", got, tt.want)
 			}
 		})
 	}
@@ -4426,6 +4443,252 @@ func TestGetNullSpaceOfMatrix(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GetNullSpaceOfMatrix(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetNullSpaceOfMatrix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetColumnSpace(t *testing.T) {
+	type args struct {
+		matrix [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "empty matrix",
+			args: args{
+				matrix: [][]float64{},
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+			},
+			want: [][]float64{
+				{1},
+			},
+		},
+		{
+			name: "identity matrix",
+			args: args{
+				matrix: [][]float64{
+					{1, 0},
+					{0, 1},
+				},
+			},
+			want: [][]float64{
+				{1, 0},
+				{0, 1},
+			},
+		},
+		{
+			name: "example 0",
+			args: args{
+				matrix: [][]float64{
+					{-1, 2, 6, 5},
+					{0, 3, -7, 9},
+					{3, -6, -18, -15},
+				},
+			},
+			want: [][]float64{
+				{-1, 2},
+				{0, 3},
+				{3, -6},
+			},
+		},
+		{
+			name: "example 1",
+			args: args{
+				matrix: [][]float64{
+					{1, -2, 4, -5},
+					{0, 3, 5, 7},
+					{-3, 6, 3, 9},
+					{2, -4, -2, -6},
+				},
+			},
+			want: [][]float64{
+				{1, -2, 4},
+				{0, 3, 5},
+				{-3, 6, 3},
+				{2, -4, -2},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetColumnSpace(tt.args.matrix); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetColumnSpace() = \n%v\n want \n%v\n", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetColumn(t *testing.T) {
+	type args struct {
+		matrix      [][]float64
+		columnIndex int
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "single item",
+			args: args{
+				matrix: [][]float64{
+					{1},
+				},
+				columnIndex: 0,
+			},
+
+			want: [][]float64{
+				{1},
+			},
+		},
+		{
+			name: "3x3 matrix 0 index",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				columnIndex: 0,
+			},
+			want: [][]float64{
+				{1},
+				{4},
+				{7},
+			},
+		},
+		{
+			name: "3x3 matrix 1 index",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				columnIndex: 1,
+			},
+			want: [][]float64{
+				{2},
+				{5},
+				{8},
+			},
+		},
+		{
+			name: "3x3 matrix 2 index",
+			args: args{
+				matrix: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+				columnIndex: 2,
+			},
+			want: [][]float64{
+				{3},
+				{6},
+				{9},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetColumn(tt.args.matrix, tt.args.columnIndex); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetColumn() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAppendMatrix(t *testing.T) {
+	type args struct {
+		matrixA [][]float64
+		matrixB [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "empty matrices",
+			args: args{
+				matrixA: [][]float64{},
+				matrixB: [][]float64{},
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "single item matrices",
+			args: args{
+				matrixA: [][]float64{{1}},
+				matrixB: [][]float64{{2}},
+			},
+			want: [][]float64{
+				{1, 2},
+			},
+		},
+		{
+			name: "append 2x2 matrices",
+			args: args{
+				matrixA: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+				matrixB: [][]float64{
+					{5, 6},
+					{7, 8},
+				},
+			},
+			want: [][]float64{
+				{1, 2, 5, 6},
+				{3, 4, 7, 8},
+			},
+		},
+		{
+			name: "matrixA is empty",
+			args: args{
+				matrixA: [][]float64{},
+				matrixB: [][]float64{
+					{5, 6},
+					{7, 8},
+				},
+			},
+			want: [][]float64{
+				{5, 6},
+				{7, 8},
+			},
+		},
+		{
+			name: "matrixB is empty",
+			args: args{
+				matrixA: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+				matrixB: [][]float64{},
+			},
+			want: [][]float64{
+				{1, 2},
+				{3, 4},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AppendMatrix(tt.args.matrixA, tt.args.matrixB); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AppendMatrix() = %v, want %v", got, tt.want)
 			}
 		})
 	}

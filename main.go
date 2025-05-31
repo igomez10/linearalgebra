@@ -19,8 +19,9 @@ import (
 // Add/subtract multiples of the top row to the other rows so that all other entries in the column containing the top row's leading entry are all zero.
 // Repeat steps 2-4 for the next leftmost nonzero entry until all the leading entries are 1.
 // Swap the rows so that the leading entry of each nonzero row is to the right of the leading entry of the row above it.
-func ToRowReducedEchelonForm(matrix [][]float64) [][]float64 {
+func ToRowReducedEchelonForm(pMatrix [][]float64) [][]float64 {
 	// Swap the rows so that all rows with all zero entries are on the bottom
+	matrix := copyMatrix(pMatrix)
 	matrix = SwapRows0sToBottom(matrix)
 
 	// Add/subtract multiples of the top row to the other rows so that all other
@@ -28,7 +29,7 @@ func ToRowReducedEchelonForm(matrix [][]float64) [][]float64 {
 	for i := 0; i < len(matrix); i++ {
 		for j := 0; j < len(matrix[i]); j++ {
 			// find non 0
-			if matrix[i][j] != 0 {
+			if !NearlyEqual(matrix[i][j], 0, 3) {
 				// make this row pivot row
 				matrix = MultiplyRowByScalar(matrix, i, float64(1/matrix[i][j]))
 
@@ -38,7 +39,7 @@ func ToRowReducedEchelonForm(matrix [][]float64) [][]float64 {
 						continue
 					}
 
-					if matrix[z][j] != 0 {
+					if !NearlyEqual(matrix[z][j], 0, 3) {
 						tmp := matrix[z][j]
 						matrix = MultiplyRowByScalar(matrix, i, -matrix[z][j])
 						matrix = AddRowToRow(matrix, matrix[i], z)
@@ -331,7 +332,7 @@ func GetPivotEntries(matrix [][]float64) [][]int {
 	i := 0
 	j := 0
 	for i < len(matrix) && j < len(matrix[i]) {
-		if matrix[i][j] != 0 {
+		if !NearlyEqual(matrix[i][j], 0, 3) {
 			answer = append(answer, []int{i, j})
 			i++
 		}
@@ -1051,4 +1052,65 @@ func GetNullSpaceOfMatrix(matrix [][]float64) [][]float64 {
 	}
 
 	return nullSpace
+}
+
+// GetColumnSpace returns the column space of a matrix
+// this is basically all the pivot columns (from the rref) but in the original matrix
+func GetColumnSpace(matrix [][]float64) [][]float64 {
+	if len(matrix) == 0 {
+		return [][]float64{}
+	}
+
+	if len(matrix[0]) == 0 {
+		return [][]float64{}
+	}
+
+	// get the row reduced echelon form of the matrix
+	rref := ToRowReducedEchelonForm(matrix)
+
+	// get the pivots entries
+	pivots := GetPivotEntries(rref)
+
+	// add all the pivot columns to the column space
+	columnSpace := [][]float64{}
+	for i := range pivots {
+		pivotColumn := GetColumn(matrix, pivots[i][1])
+		columnSpace = AppendMatrix(columnSpace, pivotColumn)
+	}
+
+	return columnSpace
+
+}
+
+func GetColumn(matrix [][]float64, columnIndex int) [][]float64 {
+	if len(matrix) == 0 || columnIndex < 0 || columnIndex >= len(matrix[0]) {
+		panic("invalid column index")
+	}
+
+	transposed := TransposeMatrix(matrix)[columnIndex]
+	res := TransposeMatrix([][]float64{transposed})
+	return res
+}
+
+func AppendMatrix(matrixA [][]float64, matrixB [][]float64) [][]float64 {
+	if len(matrixA) != len(matrixB) && len(matrixA) > 0 && len(matrixB) > 0 {
+		panic("cannot append columns of matrices with different number of rows")
+	}
+
+	if len(matrixA) == 0 {
+		return matrixB
+	}
+
+	if len(matrixB) == 0 {
+		return matrixA
+	}
+
+	newmatrix := [][]float64{}
+	for i := range matrixA {
+		newmatrix = append(newmatrix, []float64{})
+		newmatrix[i] = append(newmatrix[i], matrixA[i]...)
+		newmatrix[i] = append(newmatrix[i], matrixB[i]...)
+	}
+
+	return newmatrix
 }
