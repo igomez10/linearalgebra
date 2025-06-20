@@ -851,6 +851,33 @@ func GetColumnSpaceDimension(matrix [][]float64) int {
 	return GetMatrixRank(matrix)
 }
 
+// GetColumnSpace returns the column space of a matrix
+// this is basically all the pivot columns (from the rref) but in the original matrix
+func GetColumnSpace(matrix [][]float64) [][]float64 {
+	if len(matrix) == 0 {
+		return [][]float64{}
+	}
+
+	if len(matrix[0]) == 0 {
+		return [][]float64{}
+	}
+
+	// get the row reduced echelon form of the matrix
+	rref := ToRowReducedEchelonForm(matrix)
+
+	// get the pivots entries
+	pivots := GetPivotEntries(rref)
+
+	// add all the pivot columns to the column space
+	columnSpace := [][]float64{}
+	for i := range pivots {
+		pivotColumn := GetColumn(matrix, pivots[i][1])
+		columnSpace = AppendMatrix(columnSpace, pivotColumn)
+	}
+
+	return columnSpace
+}
+
 // The dimension of the row space is equal to the number of linearly independent rows
 func GetRowSpaceDimension(matrix [][]float64) int {
 	return GetMatrixRank(matrix)
@@ -929,6 +956,7 @@ func GetMatrixNullity(matrix [][]float64) int {
 }
 
 // matrix is invertible if there exists an inverse A^-1
+// A^-1 = 1/det(A) * adj(A)
 func GetInverseMatrixByDeterminant(matrix [][]float64) [][]float64 {
 	if !IsMatrixSquare(matrix) {
 		panic("cannot calculate inverse of non square matrix")
@@ -1008,6 +1036,7 @@ func IsVectorInTheNullSpaceOfMatrix(vector []float64, matrix [][]float64) bool {
 // The null space of a matrix is the set of all vectors v such that A*v = 0
 // It is the solution set of the homogeneous system of linear equations represented by the matrix A.
 // The null space can be found by solving the system of equations represented by the matrix
+// this is also the kernel of the matrix
 func GetNullSpaceOfMatrix(matrix [][]float64) [][]float64 {
 	if len(matrix) == 0 {
 		return [][]float64{}
@@ -1052,34 +1081,6 @@ func GetNullSpaceOfMatrix(matrix [][]float64) [][]float64 {
 	}
 
 	return nullSpace
-}
-
-// GetColumnSpace returns the column space of a matrix
-// this is basically all the pivot columns (from the rref) but in the original matrix
-func GetColumnSpace(matrix [][]float64) [][]float64 {
-	if len(matrix) == 0 {
-		return [][]float64{}
-	}
-
-	if len(matrix[0]) == 0 {
-		return [][]float64{}
-	}
-
-	// get the row reduced echelon form of the matrix
-	rref := ToRowReducedEchelonForm(matrix)
-
-	// get the pivots entries
-	pivots := GetPivotEntries(rref)
-
-	// add all the pivot columns to the column space
-	columnSpace := [][]float64{}
-	for i := range pivots {
-		pivotColumn := GetColumn(matrix, pivots[i][1])
-		columnSpace = AppendMatrix(columnSpace, pivotColumn)
-	}
-
-	return columnSpace
-
 }
 
 func GetColumn(matrix [][]float64, columnIndex int) [][]float64 {
