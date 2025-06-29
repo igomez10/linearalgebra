@@ -4693,3 +4693,58 @@ func TestAppendMatrix(t *testing.T) {
 		})
 	}
 }
+
+func TestHadamardProduct(t *testing.T) {
+	type args struct {
+		matrixA [][]float64
+		matrixB [][]float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]float64
+	}{
+		{
+			name: "empty matrices",
+			args: args{
+				matrixA: [][]float64{},
+				matrixB: [][]float64{},
+			},
+			want: [][]float64{},
+		},
+		{
+			name: "single item matrices",
+			args: args{
+				matrixA: [][]float64{{1}},
+				matrixB: [][]float64{{2}},
+			},
+			want: [][]float64{
+				{2},
+			},
+		},
+		{
+			name: "2x2 matrices",
+			args: args{
+				matrixA: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+				matrixB: [][]float64{
+					{5, 6},
+					{7, 8},
+				},
+			},
+			want: [][]float64{
+				{5, 12},
+				{21, 32},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := HadamardProduct(tt.args.matrixA, tt.args.matrixB); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("HadamardProduct() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
