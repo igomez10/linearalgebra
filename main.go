@@ -1115,3 +1115,30 @@ func AppendMatrix(matrixA [][]float64, matrixB [][]float64) [][]float64 {
 
 	return newmatrix
 }
+
+func HadamardProduct(matrixA, matrixB [][]float64) [][]float64 {
+	if !CanMultiplyMatrices(matrixA, matrixB) {
+		panic("cannot calculate Hadamard product of matrices with different dimensions")
+	}
+
+	if len(matrixA) == 0 || len(matrixB) == 0 {
+		return [][]float64{}
+	}
+
+	if len(matrixA) != len(matrixB) || len(matrixA[0]) != len(matrixB[0]) {
+		panic("cannot calculate Hadamard product of matrices with different dimensions")
+	}
+
+	result := make([][]float64, len(matrixA))
+	for i := range result {
+		result[i] = make([]float64, len(matrixA[i]))
+	}
+
+	for i := range matrixA {
+		for j := range matrixA[i] {
+			result[i][j] = matrixA[i][j] * matrixB[i][j]
+		}
+	}
+
+	return result
+}
