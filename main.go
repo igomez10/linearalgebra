@@ -823,6 +823,7 @@ func IsMatrixSquare(matrix [][]float64) bool {
 }
 
 // IsMatrixInvertible checks if determinant is non 0
+// If the matrix has an inverse then it is invertible
 func IsMatrixInvertible(matrix [][]float64) bool {
 	if !IsMatrixSquare(matrix) {
 		return false
