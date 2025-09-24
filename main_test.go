@@ -1978,7 +1978,7 @@ func TestGetEliminationMatrix(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			originalMatrix := copyMatrix(tt.args.matrix)
+			originalMatrix := CopyMatrix(tt.args.matrix)
 			got := GetEliminationMatrix(tt.args.matrix)
 			if !areMatricesEqual(got, tt.want) {
 				t.Errorf("GetEliminationMatrix() = \n%v\n, want \n%v\n", got, tt.want)

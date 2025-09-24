@@ -21,7 +21,7 @@ import (
 // Swap the rows so that the leading entry of each nonzero row is to the right of the leading entry of the row above it.
 func ToRowReducedEchelonForm(pMatrix [][]float64) [][]float64 {
 	// Swap the rows so that all rows with all zero entries are on the bottom
-	matrix := copyMatrix(pMatrix)
+	matrix := CopyMatrix(pMatrix)
 	matrix = SwapRows0sToBottom(matrix)
 
 	// Add/subtract multiples of the top row to the other rows so that all other
@@ -59,7 +59,7 @@ func ToRowReducedEchelonForm(pMatrix [][]float64) [][]float64 {
 	return matrix
 }
 
-func copyMatrix(matrix [][]float64) [][]float64 {
+func CopyMatrix(matrix [][]float64) [][]float64 {
 	newMatrix := make([][]float64, len(matrix))
 
 	for i := range matrix {
@@ -312,7 +312,7 @@ func MultiplyMatrixByScalar(matrix [][]float64, scalar float64) [][]float64 {
 }
 
 func AddRowToRow(matrix [][]float64, rowToAdd []float64, rowIndex int) [][]float64 {
-	copiedMatrix := copyMatrix(matrix)
+	copiedMatrix := CopyMatrix(matrix)
 	if rowIndex < 0 || rowIndex >= len(copiedMatrix) || len(copiedMatrix[0]) != len(rowToAdd) {
 		panic("invalid change")
 	}
@@ -499,7 +499,7 @@ func GetUnitVector(vector []float64) []float64 {
 // therefore it is not possible to identify a matrix with
 // infinite solutions
 func GetNumberOfSolutions(matrix [][]float64) float64 {
-	matrixCopied := copyMatrix(matrix)
+	matrixCopied := CopyMatrix(matrix)
 	matrixCopied = ToRowReducedEchelonForm(matrixCopied)
 
 	// if in rref the last row is 0s then we have 0 solutions
@@ -520,7 +520,7 @@ func GetNumberOfSolutions(matrix [][]float64) float64 {
 // technically the span is all the possible linear combinations of the vectors
 // but returning this in code is not possible
 func GetMatrixSpan(matrix [][]float64) int {
-	copiedMatrix := copyMatrix(matrix)
+	copiedMatrix := CopyMatrix(matrix)
 	copiedMatrix = ToRowReducedEchelonForm(copiedMatrix)
 
 	// count number of pivots
