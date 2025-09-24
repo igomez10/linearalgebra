@@ -1143,3 +1143,133 @@ func HadamardProduct(matrixA, matrixB [][]float64) [][]float64 {
 
 	return result
 }
+
+func GetEigenvalues(matrix [][]float64) []complex128 {
+	if !IsMatrixSquare(matrix) {
+		panic("cannot calculate eigenvalues of non square matrix")
+	}
+
+	if len(matrix) == 0 {
+		return []complex128{}
+	}
+
+	if len(matrix) == 1 {
+		return []complex128{complex(matrix[0][0], 0)}
+	}
+
+	// For 2x2 matrix we can use the quadratic formula
+	if len(matrix) == 2 {
+		a := 1.0
+		b := -(matrix[0][0] + matrix[1][1])
+		c := matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0]
+
+		discriminant := b*b - 4*a*c
+		if discriminant >= 0 {
+			root1 := (-b + math.Sqrt(discriminant)) / (2 * a)
+			root2 := (-b - math.Sqrt(discriminant)) / (2 * a)
+			return []complex128{complex(root1, 0), complex(root2, 0)}
+		} else {
+			realPart := -b / (2 * a)
+			imaginaryPart := math.Sqrt(-discriminant) / (2 * a)
+			return []complex128{complex(realPart, imaginaryPart), complex(realPart, -imaginaryPart)}
+		}
+	}
+
+	// For larger matrices, we can use the QR algorithm.
+	// This simple implementation drives the matrix toward real Schur form
+	// (quasi-upper-triangular with 1x1 and 2x2 blocks). We'll then extract
+	// eigenvalues from the resulting 1x1/2x2 blocks so complex pairs are handled.
+	A := CopyMatrix(matrix)
+	n := len(A)
+	for iter := 0; iter < 1000; iter++ {
+		Q, R := qrDecomposition(A)
+		A = DotProduct(R, Q)
+	}
+
+	// Zero-out tiny subdiagonal elements for robust block detection
+	eps := 1e-9
+	for i := 0; i < n-1; i++ {
+		if math.Abs(A[i+1][i]) < eps {
+			A[i+1][i] = 0
+		}
+	}
+
+	// Extract eigenvalues from 1x1 and 2x2 blocks
+	eigenvalues := make([]complex128, 0, n)
+	i := 0
+	for i < n {
+		if i < n-1 && math.Abs(A[i+1][i]) > 0 { // 2x2 block
+			a, b := A[i][i], A[i][i+1]
+			c, d := A[i+1][i], A[i+1][i+1]
+			// Characteristic: λ^2 - (a+d)λ + (ad - bc) = 0
+			tr := a + d
+			det := a*d - b*c
+			disc := tr*tr - 4*det
+			if disc >= 0 {
+				sqrtDisc := math.Sqrt(disc)
+				lambda1 := 0.5 * (tr + sqrtDisc)
+				lambda2 := 0.5 * (tr - sqrtDisc)
+				eigenvalues = append(eigenvalues, complex(lambda1, 0), complex(lambda2, 0))
+			} else {
+				realPart := 0.5 * tr
+				imagPart := 0.5 * math.Sqrt(-disc)
+				eigenvalues = append(eigenvalues, complex(realPart, imagPart), complex(realPart, -imagPart))
+			}
+			i += 2
+		} else { // 1x1 block
+			eigenvalues = append(eigenvalues, complex(A[i][i], 0))
+			i++
+		}
+	}
+
+	return eigenvalues
+}
+
+// qrDecomposition performs QR decomposition of matrix A
+// using the Gram-Schmidt process
+// A = QR where Q is orthogonal and R is upper triangular
+func qrDecomposition(A [][]float64) ([][]float64, [][]float64) {
+	m := len(A)
+	n := len(A[0])
+
+	Q := make([][]float64, m)
+	for i := range Q {
+		Q[i] = make([]float64, n)
+	}
+	R := make([][]float64, n)
+	for i := range R {
+		R[i] = make([]float64, n)
+	}
+
+	for j := 0; j < n; j++ {
+		for i := 0; i < m; i++ {
+			Q[i][j] = A[i][j]
+		}
+		for k := 0; k < j; k++ {
+			var dot float64
+			for i := 0; i < m; i++ {
+				dot += Q[i][k] * A[i][j]
+			}
+			for i := 0; i < m; i++ {
+				Q[i][j] -= dot * Q[i][k]
+			}
+		}
+		var norm float64
+		for i := 0; i < m; i++ {
+			norm += Q[i][j] * Q[i][j]
+		}
+		norm = math.Sqrt(norm)
+		for i := 0; i < m; i++ {
+			Q[i][j] /= norm
+		}
+		for k := 0; k <= j; k++ {
+			var dot float64
+			for i := 0; i < m; i++ {
+				dot += Q[i][k] * A[i][j]
+			}
+			R[k][j] = dot
+		}
+	}
+
+	return Q, R
+}

@@ -4748,3 +4748,142 @@ func TestHadamardProduct(t *testing.T) {
 		})
 	}
 }
+
+func TestGetEigenvalues(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		matrix [][]float64
+		want   []complex128
+	}{
+		{
+			name:   "empty matrix",
+			matrix: [][]float64{},
+			want:   []complex128{},
+		},
+		{
+			name:   "1x1 matrix",
+			matrix: [][]float64{{-5}},
+			want:   []complex128{-5},
+		},
+		{
+			name: "2x2 identity matrix",
+			matrix: [][]float64{
+				{1, 0},
+				{0, 1},
+			},
+			want: []complex128{1, 1},
+		},
+		{
+			name: "2x2 diagonal matrix",
+			matrix: [][]float64{
+				{3, 0},
+				{0, 4},
+			},
+			want: []complex128{3, 4},
+		},
+		{
+			name: "2x2 real symmetric (distinct eigenvalues)",
+			matrix: [][]float64{
+				{2, 1},
+				{1, 2},
+			},
+			want: []complex128{3, 1},
+		},
+		{
+			name: "2x2 defective (repeated eigenvalue)",
+			matrix: [][]float64{
+				{2, 1},
+				{0, 2},
+			},
+			want: []complex128{2, 2},
+		},
+		{
+			name: "2x2 matrix with complex eigenvalues",
+			matrix: [][]float64{
+				{0, -1},
+				{1, 0},
+			},
+			want: []complex128{complex(0, 1), complex(0, -1)},
+		},
+		{
+			name: "2x2 distinct real eigenvalues (non-symmetric)",
+			matrix: [][]float64{
+				{4, 2},
+				{1, 3},
+			},
+			// Characteristic: λ^2 - 7λ + 10 = 0 -> λ = 5, 2
+			want: []complex128{5, 2},
+		},
+		{
+			name: "3x3 upper triangular matrix",
+			matrix: [][]float64{
+				{1, 2, 3},
+				{0, 4, 5},
+				{0, 0, 6},
+			},
+			want: []complex128{1, 4, 6},
+		},
+		{
+			name: "3x3 matrix with repeated eigenvalues",
+			matrix: [][]float64{
+				{2, 1, 0},
+				{0, 2, 1},
+				{0, 0, 2},
+			},
+			want: []complex128{2, 2, 2},
+		},
+		{
+			name: "3x3 Jordan block (triple eigenvalue)",
+			matrix: [][]float64{
+				{5, 1, 0},
+				{0, 5, 1},
+				{0, 0, 5},
+			},
+			want: []complex128{5, 5, 5},
+		},
+		{
+			name: "3x3 matrix with complex eigenvalues",
+			matrix: [][]float64{
+				{0, -1, 0},
+				{1, 0, 0},
+				{0, 0, 3},
+			},
+			want: []complex128{complex(0, 1), complex(0, -1), 3},
+		},
+		{
+			name: "4x4 block diagonal: complex pair and repeated real",
+			matrix: [][]float64{
+				{0, -2, 0, 0},
+				{2, 0, 0, 0},
+				{0, 0, 1, 1},
+				{0, 0, 0, 1},
+			},
+			// eigenvalues: 2i, -2i, 1, 1
+			want: []complex128{complex(0, 2), complex(0, -2), 1, 1},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetEigenvalues(tt.matrix)
+			setGot := make(map[complex128]struct{})
+			for _, v := range got {
+				setGot[v] = struct{}{}
+			}
+			setWant := make(map[complex128]struct{})
+			for _, v := range tt.want {
+				setWant[v] = struct{}{}
+			}
+			if len(setGot) != len(setWant) {
+				t.Errorf("GetEigenvalues() = %v, want %v", got, tt.want)
+				return
+			}
+			for k := range setGot {
+				if _, exists := setWant[k]; !exists {
+					t.Errorf("GetEigenvalues() = %v, want %v", got, tt.want)
+					return
+				}
+			}
+		})
+	}
+}
