@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/cmplx"
 	"reflect"
 	"testing"
 )
@@ -4881,6 +4882,213 @@ func TestGetEigenvalues(t *testing.T) {
 			for k := range setGot {
 				if _, exists := setWant[k]; !exists {
 					t.Errorf("GetEigenvalues() = %v, want %v", got, tt.want)
+					return
+				}
+			}
+		})
+	}
+}
+
+func TestGetEigenvectors(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		matrix [][]float64
+		want   [][]complex128
+	}{
+		{
+			name:   "empty matrix",
+			matrix: [][]float64{},
+			want:   [][]complex128{},
+		},
+		{
+			name: "1x1 matrix",
+			matrix: [][]float64{
+				{7},
+			},
+			want: [][]complex128{
+				{1},
+			},
+		},
+		{
+			name: "2x2 identity matrix",
+			matrix: [][]float64{
+				{1, 0},
+				{0, 1},
+			},
+			want: [][]complex128{
+				{1, 0},
+				{0, 1},
+			},
+		},
+		{
+			name: "2x2 diagonal matrix",
+			matrix: [][]float64{
+				{3, 0},
+				{0, 4},
+			},
+			want: [][]complex128{
+				{0, 1},
+				{1, 0},
+			},
+		},
+		{
+			name: "2x2 real symmetric (distinct eigenvalues)",
+			matrix: [][]float64{
+				{2, 1},
+				{1, 2},
+			},
+			want: [][]complex128{
+				{complex(1/math.Sqrt(2), 0), complex(1/math.Sqrt(2), 0)},
+				{complex(1/math.Sqrt(2), 0), complex(-1/math.Sqrt(2), 0)},
+			},
+		},
+		{
+			name: "2x2 defective (repeated eigenvalue)",
+			matrix: [][]float64{
+				{2, 1},
+				{0, 2},
+			},
+			want: [][]complex128{
+				{1, 0},
+				{0, 0},
+			},
+		},
+		{
+			name: "2x2 matrix with complex eigenvalues",
+			matrix: [][]float64{
+				{0, -1},
+				{1, 0},
+			},
+			want: [][]complex128{
+				{complex(0, 1/math.Sqrt(2)), complex(1/math.Sqrt(2), 0)},
+				{complex(0, 1/math.Sqrt(2)), complex(-1/math.Sqrt(2), 0)},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetEigenvectors(tt.matrix)
+			if len(got) != len(tt.want) {
+				t.Errorf("GetEigenvectors() = %v, want %v", got, tt.want)
+				return
+			}
+			for i := range got {
+				if len(got[i]) != len(tt.want[i]) {
+					t.Errorf("GetEigenvectors() = %v, want %v", got, tt.want)
+					return
+				}
+				for j := range got[i] {
+					diff := cmplx.Abs(got[i][j] - tt.want[i][j])
+					if diff > 1e-6 {
+						t.Errorf("GetEigenvectors() = %v, want %v", got, tt.want)
+						return
+					}
+				}
+			}
+		})
+	}
+}
+
+func Test_normalizeEigenvector(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		v    []complex128
+		want []complex128
+	}{
+		{
+			name: "2D vector",
+			v:    []complex128{3 + 4i, 0},
+			want: []complex128{complex(0.6, 0.8), 0},
+		},
+		{
+			name: "3D vector",
+			v:    []complex128{1, 2, 2},
+			want: []complex128{complex(1.0/3, 0), complex(2.0/3, 0), complex(2.0/3, 0)},
+		},
+		{
+			name: "zero vector",
+			v:    []complex128{0, 0, 0},
+			want: []complex128{0, 0, 0},
+		},
+		{
+			name: "complex vector",
+			v:    []complex128{1 + 1i, 1 - 1i},
+			want: []complex128{complex(0.5, 0.5), complex(0.5, -0.5)},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			normalizeEigenvector(tt.v)
+			if len(tt.v) != len(tt.want) {
+				t.Errorf("normalizeEigenvector() = %v, want %v", tt.v, tt.want)
+				return
+			}
+			for i := range tt.v {
+				diff := cmplx.Abs(tt.v[i] - tt.want[i])
+				if diff > 1e-6 {
+					t.Errorf("normalizeEigenvector() = %v, want %v", tt.v, tt.want)
+					return
+				}
+			}
+		})
+	}
+}
+
+func Test_solveComplexHomogeneousSystem(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		A    [][]complex128
+		want []complex128
+	}{
+		{
+			name: "2x2 matrix with unique solution",
+			A: [][]complex128{
+				{1, 2},
+				{3, 4},
+			},
+			want: []complex128{0, 0},
+		},
+		{
+			name: "2x2 matrix with infinite solutions",
+			A: [][]complex128{
+				{1, -1},
+				{2, -2},
+			},
+			want: []complex128{1, 1}, // Example solution
+		},
+		{
+			name: "3x3 matrix with unique solution",
+			A: [][]complex128{
+				{1, 0, 0},
+				{0, 1, 0},
+				{0, 0, 1},
+			},
+			want: []complex128{0, 0, 0},
+		},
+		{
+			name: "3x3 matrix with infinite solutions",
+			A: [][]complex128{
+				{1, 2, -1},
+				{2, 4, -2},
+				{3, 6, -3},
+			},
+			want: []complex128{1, 0, 1}, // Valid solution: sets last component to 1 and back-substitutes
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := solveComplexHomogeneousSystem(tt.A)
+			if len(got) != len(tt.want) {
+				t.Errorf("solveComplexHomogeneousSystem() = %v, want %v", got, tt.want)
+				return
+			}
+			for i := range got {
+				diff := cmplx.Abs(got[i] - tt.want[i])
+				if diff > 1e-6 {
+					t.Errorf("solveComplexHomogeneousSystem() = %v, want %v", got, tt.want)
 					return
 				}
 			}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/cmplx"
 	"sort"
 	"strconv"
 )
@@ -1144,6 +1145,10 @@ func HadamardProduct(matrixA, matrixB [][]float64) [][]float64 {
 	return result
 }
 
+// GetEigenvalues returns the eigenvalues of a square matrix
+// For 2x2 matrices we use the quadratic formula
+// For larger matrices we use the QR algorithm to approximate the eigenvalues
+// The eigenvalues are returned as a slice of complex128 to account for complex eigenvalues
 func GetEigenvalues(matrix [][]float64) []complex128 {
 	if !IsMatrixSquare(matrix) {
 		panic("cannot calculate eigenvalues of non square matrix")
@@ -1272,4 +1277,208 @@ func qrDecomposition(A [][]float64) ([][]float64, [][]float64) {
 	}
 
 	return Q, R
+}
+
+func GetEigenvectors(matrix [][]float64) [][]complex128 {
+	if !IsMatrixSquare(matrix) {
+		panic("cannot calculate eigenvectors of non square matrix")
+	}
+
+	if len(matrix) == 0 {
+		return [][]complex128{}
+	}
+
+	n := len(matrix)
+	eigenvalues := GetEigenvalues(matrix)
+
+	// Cache eigenspaces to handle repeated eigenvalues
+	// Key: eigenvalue (as complex), Value: list of eigenvectors for that eigenvalue
+	eigenspaceCache := make(map[complex128][][]complex128)
+	vectorIndexCache := make(map[complex128]int)
+
+	eigenvectors := make([][]complex128, len(eigenvalues))
+
+	for idx, lambda := range eigenvalues {
+		// Check if we've already computed the eigenspace for this eigenvalue
+		eigenspace, cached := eigenspaceCache[lambda]
+		if !cached {
+			eigenspace = computeEigenspace(matrix, lambda, n)
+			eigenspaceCache[lambda] = eigenspace
+			vectorIndexCache[lambda] = 0
+		}
+
+		// Get the next eigenvector from this eigenspace (or zero vector if exhausted)
+		vectorIdx := vectorIndexCache[lambda]
+		if vectorIdx < len(eigenspace) {
+			eigenvectors[idx] = eigenspace[vectorIdx]
+			vectorIndexCache[lambda]++
+		} else {
+			// Use zero vector if we've exhausted the eigenspace (defective matrix)
+			eigenvectors[idx] = make([]complex128, n)
+		}
+	}
+
+	return eigenvectors
+}
+
+// computeEigenspace finds all linearly independent eigenvectors for a given eigenvalue.
+// For real eigenvalues, it solves (A - λI)v = 0 and returns the null space basis.
+// For complex eigenvalues, it finds a single eigenvector.
+func computeEigenspace(matrix [][]float64, lambda complex128, n int) [][]complex128 {
+	if imag(lambda) == 0 {
+		return computeRealEigenspace(matrix, real(lambda), n)
+	}
+	return computeComplexEigenspace(matrix, lambda, n)
+}
+
+// computeRealEigenspace solves (A - λI)v = 0 for real eigenvalue λ
+func computeRealEigenspace(matrix [][]float64, lambda float64, n int) [][]complex128 {
+	// Form (A - λI)
+	AminusLambdaI := CopyMatrix(matrix)
+	for i := 0; i < n; i++ {
+		AminusLambdaI[i][i] -= lambda
+	}
+
+	// Find null space vectors
+	nullSpace := GetNullSpaceOfMatrix(AminusLambdaI)
+
+	// Convert null space vectors to complex and normalize
+	eigenspace := make([][]complex128, len(nullSpace))
+	for i, vec := range nullSpace {
+		eigenvector := make([]complex128, n)
+		for j := 0; j < n; j++ {
+			eigenvector[j] = complex(vec[j], 0)
+		}
+		normalizeEigenvector(eigenvector)
+		eigenspace[i] = eigenvector
+	}
+
+	return eigenspace
+}
+
+// computeComplexEigenspace solves (A - λI)v = 0 for complex eigenvalue λ
+func computeComplexEigenspace(matrix [][]float64, lambda complex128, n int) [][]complex128 {
+	// Form (A - λI) in complex arithmetic
+	AminusLambdaI := make([][]complex128, n)
+	for i := 0; i < n; i++ {
+		AminusLambdaI[i] = make([]complex128, n)
+		for j := 0; j < n; j++ {
+			AminusLambdaI[i][j] = complex(matrix[i][j], 0)
+		}
+		AminusLambdaI[i][i] -= lambda
+	}
+
+	// Find an eigenvector
+	eigenvector := solveComplexHomogeneousSystem(AminusLambdaI)
+	normalizeEigenvector(eigenvector)
+
+	return [][]complex128{eigenvector}
+}
+
+// normalizeEigenvector scales a complex vector to unit length and applies a consistent sign convention.
+// The sign is chosen so that the first non-zero element is positive (real part positive, or
+// if real part is zero, imaginary part positive).
+func normalizeEigenvector(v []complex128) {
+	// Calculate the norm (magnitude)
+	normSquared := complex(0, 0)
+	for i := range v {
+		normSquared += v[i] * cmplx.Conj(v[i])
+	}
+	norm := math.Sqrt(real(normSquared))
+
+	// Skip normalization for zero vectors
+	if norm <= 1e-10 {
+		return
+	}
+
+	// Normalize to unit length
+	normComplex := complex(norm, 0)
+	for i := range v {
+		v[i] /= normComplex
+	}
+
+	// Apply sign convention: flip all elements if first non-zero element is "negative"
+	for i := range v {
+		if cmplx.Abs(v[i]) > 1e-10 {
+			// For complex numbers, we use the convention:
+			// - If real part is negative, flip the sign
+			// - If real part is zero and imaginary part is negative, flip the sign
+			if real(v[i]) < 0 || (real(v[i]) == 0 && imag(v[i]) < 0) {
+				for j := range v {
+					v[j] = -v[j]
+				}
+			}
+			break
+		}
+	}
+}
+
+// solveComplexHomogeneousSystem finds a non-trivial solution to Ax = 0 for complex matrix A
+func solveComplexHomogeneousSystem(A [][]complex128) []complex128 {
+	n := len(A)
+	if n == 0 {
+		return []complex128{}
+	}
+
+	// Create a copy for Gaussian elimination
+	mat := make([][]complex128, n)
+	for i := 0; i < n; i++ {
+		mat[i] = make([]complex128, n)
+		copy(mat[i], A[i])
+	}
+
+	// Gaussian elimination to find rank
+	rank := 0
+	for col := 0; col < n && rank < n; col++ {
+		// Find pivot
+		pivot := rank
+		for i := rank + 1; i < n; i++ {
+			if cmplx.Abs(mat[i][col]) > cmplx.Abs(mat[pivot][col]) {
+				pivot = i
+			}
+		}
+
+		if cmplx.Abs(mat[pivot][col]) < 1e-10 {
+			continue
+		}
+
+		// Swap rows
+		mat[rank], mat[pivot] = mat[pivot], mat[rank]
+
+		// Eliminate column
+		for i := rank + 1; i < n; i++ {
+			if cmplx.Abs(mat[i][col]) > 1e-10 {
+				factor := mat[i][col] / mat[rank][col]
+				for j := col; j < n; j++ {
+					mat[i][j] -= factor * mat[rank][j]
+				}
+			}
+		}
+		rank++
+	}
+
+	// For a full-rank matrix, the only solution to Ax=0 is the zero vector
+	// This shouldn't happen for (A - λI) when λ is a true eigenvalue,
+	// but we handle it for completeness
+	if rank == n {
+		return make([]complex128, n) // Return zero vector
+	}
+
+	// Create eigenvector from null space by setting last component to 1
+	// and back-substituting to find other components
+	eigenvector := make([]complex128, n)
+	eigenvector[n-1] = complex(1, 0)
+
+	// Back-substitute to find other components
+	for i := rank - 1; i >= 0; i-- {
+		sum := complex(0, 0)
+		for j := i + 1; j < n; j++ {
+			sum += mat[i][j] * eigenvector[j]
+		}
+		if cmplx.Abs(mat[i][i]) > 1e-10 {
+			eigenvector[i] = -sum / mat[i][i]
+		}
+	}
+
+	return eigenvector
 }
