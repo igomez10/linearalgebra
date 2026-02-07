@@ -4965,6 +4965,19 @@ func TestGetEigenvectors(t *testing.T) {
 				{complex(0, 1/math.Sqrt(2)), complex(-1/math.Sqrt(2), 0)},
 			},
 		},
+		{
+			name: "3x3 block-diagonal with complex eigenvalues",
+			matrix: [][]float64{
+				{0, -1, 0},
+				{1, 0, 0},
+				{0, 0, 5},
+			},
+			want: [][]complex128{
+				{complex(0, 1/math.Sqrt(2)), complex(1/math.Sqrt(2), 0), 0},
+				{complex(0, 1/math.Sqrt(2)), complex(-1/math.Sqrt(2), 0), 0},
+				{0, 0, 1},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -5075,7 +5088,16 @@ func Test_solveComplexHomogeneousSystem(t *testing.T) {
 				{2, 4, -2},
 				{3, 6, -3},
 			},
-			want: []complex128{1, 0, 1}, // Valid solution: sets last component to 1 and back-substitutes
+			want: []complex128{-2, 1, 0}, // Valid solution: free column is column 1, back-substitution yields -2
+		},
+		{
+			name: "3x3 complex (A - iI) counterexample",
+			A: [][]complex128{
+				{complex(0, -1), -1, 0},
+				{1, complex(0, -1), 0},
+				{0, 0, complex(5, -1)},
+			},
+			want: []complex128{complex(0, 1), 1, 0}, // Eigenvector for eigenvalue i
 		},
 	}
 	for _, tt := range tests {

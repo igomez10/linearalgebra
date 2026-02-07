@@ -1403,7 +1403,7 @@ func normalizeEigenvector(v []complex128) {
 			// For complex numbers, we use the convention:
 			// - If real part is negative, flip the sign
 			// - If real part is zero and imaginary part is negative, flip the sign
-			if real(v[i]) < 0 || (real(v[i]) == 0 && imag(v[i]) < 0) {
+			if real(v[i]) < -1e-10 || (math.Abs(real(v[i])) < 1e-10 && imag(v[i]) < -1e-10) {
 				for j := range v {
 					v[j] = -v[j]
 				}
@@ -1429,6 +1429,7 @@ func solveComplexHomogeneousSystem(A [][]complex128) []complex128 {
 
 	// Gaussian elimination to find rank
 	rank := 0
+	pivotCols := make([]int, 0, n)
 	for col := 0; col < n && rank < n; col++ {
 		// Find pivot
 		pivot := rank
@@ -1454,6 +1455,7 @@ func solveComplexHomogeneousSystem(A [][]complex128) []complex128 {
 				}
 			}
 		}
+		pivotCols = append(pivotCols, col)
 		rank++
 	}
 
@@ -1464,19 +1466,32 @@ func solveComplexHomogeneousSystem(A [][]complex128) []complex128 {
 		return make([]complex128, n) // Return zero vector
 	}
 
-	// Create eigenvector from null space by setting last component to 1
-	// and back-substituting to find other components
+	// Find the first free column (not a pivot column) and set it to 1
 	eigenvector := make([]complex128, n)
-	eigenvector[n-1] = complex(1, 0)
+	pivotSet := make(map[int]bool, rank)
+	for _, pc := range pivotCols {
+		pivotSet[pc] = true
+	}
+	freeCol := -1
+	for c := 0; c < n; c++ {
+		if !pivotSet[c] {
+			freeCol = c
+			break
+		}
+	}
+	if freeCol >= 0 {
+		eigenvector[freeCol] = complex(1, 0)
+	}
 
-	// Back-substitute to find other components
+	// Back-substitute using tracked pivot columns
 	for i := rank - 1; i >= 0; i-- {
+		pc := pivotCols[i]
 		sum := complex(0, 0)
-		for j := i + 1; j < n; j++ {
+		for j := pc + 1; j < n; j++ {
 			sum += mat[i][j] * eigenvector[j]
 		}
-		if cmplx.Abs(mat[i][i]) > 1e-10 {
-			eigenvector[i] = -sum / mat[i][i]
+		if cmplx.Abs(mat[i][pc]) > 1e-10 {
+			eigenvector[pc] = -sum / mat[i][pc]
 		}
 	}
 
