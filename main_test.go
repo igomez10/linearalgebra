@@ -5574,10 +5574,10 @@ func TestMatrix_GetCovarianceMatrix(t *testing.T) {
 
 func TestReadCSVToMatrix(t *testing.T) {
 	tests := []struct {
-		name string // description of this test case
-		// Named input parameters for target function.
-		reader io.Reader
-		want   Matrix
+		name       string
+		reader     io.Reader
+		skipHeader bool
+		want       Matrix
 	}{
 		{
 			name: "simple 2x2 CSV",
@@ -5616,10 +5616,23 @@ func TestReadCSVToMatrix(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "CSV with header",
+			reader: strings.NewReader(
+				"col1,col2\n1,2\n3,4\n",
+			),
+			skipHeader: true,
+			want: Matrix{
+				data: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ReadCSVToMatrix(tt.reader)
+			got := ReadCSVToMatrix(tt.reader, tt.skipHeader)
 			if !areMatricesEqual(got.data, tt.want.data) {
 				t.Errorf("ReadCSVToMatrix() = %v, want %v", got.data, tt.want.data)
 			}
@@ -5633,12 +5646,18 @@ func TestReadCSVToMatrixFromFile(t *testing.T) {
 	// 3,4
 
 	os.WriteFile("/tmp/test_matrix.csv", []byte("1,2\n3,4\n"), 0644)
+	// prepare test file /tmp/test_matrix_with_header.csv with content:
+	// col1,col2
+	// 1,2
+	// 3,4
+	os.WriteFile("/tmp/test_matrix_with_header.csv", []byte("col1,col2\n1,2\n3,4\n"), 0644)
 
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
-		filePath string
-		want     Matrix
+		filePath   string
+		skipHeader bool
+		want       Matrix
 	}{
 		{
 			name:     "simple 2x2 CSV file",
@@ -5650,13 +5669,42 @@ func TestReadCSVToMatrixFromFile(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:       "CSV file with header",
+			filePath:   "/tmp/test_matrix_with_header.csv",
+			skipHeader: true,
+			want: Matrix{
+				data: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ReadCSVToMatrixFromFile(tt.filePath)
+			got := ReadCSVToMatrixFromFile(tt.filePath, tt.skipHeader)
 			if !areMatricesEqual(got.data, tt.want.data) {
 				t.Errorf("ReadCSVToMatrixFromFile() = %v, want %v", got.data, tt.want.data)
 			}
 		})
+	}
+}
+
+func TestPCA(t *testing.T) {
+	// read file
+	testfile := "/Users/ignacio/Downloads/pca_dataset.csv"
+	m := ReadCSVToMatrixFromFile(testfile, true)
+	if len(m.data) == 0 {
+		t.Fatalf("unexpected empty size")
+	}
+
+	pcs := PCA(m)
+	for i := range pcs[:3] {
+		fmt.Println("Principal Component", i+1)
+		fmt.Printf(" variance explained by this component: %f\n", pcs[i].Variance)
+		for j := range pcs[i].Vector {
+			fmt.Printf("  %f\n", pcs[i].Vector[j])
+		}
 	}
 }

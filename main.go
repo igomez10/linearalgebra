@@ -1554,22 +1554,25 @@ func (m *Matrix) Center() {
 // ReadCSVToMatrixFromFile reads a CSV file and returns a Matrix struct
 // For better testing use ReadCSVToMatrix which takes an io.Reader,
 // this way we can use strings.NewReader in tests
-func ReadCSVToMatrixFromFile(filePath string) Matrix {
+func ReadCSVToMatrixFromFile(filePath string, skipHeader bool) Matrix {
 	file, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	return ReadCSVToMatrix(file)
+	return ReadCSVToMatrix(file, skipHeader)
 }
 
 // ReadCSVToMatrix reads CSV data from an io.Reader and returns a Matrix struct
-func ReadCSVToMatrix(reader io.Reader) Matrix {
+func ReadCSVToMatrix(reader io.Reader, skipHeader bool) Matrix {
 	csvreader := csv.NewReader(reader)
 	records, err := csvreader.ReadAll()
 	if err != nil {
 		panic(err)
+	}
+	if skipHeader {
+		records = records[1:]
 	}
 
 	matrixData := make([][]float64, len(records))
@@ -1779,4 +1782,57 @@ func GetMean[T float64 | int | int64 | float32](nums []T) float64 {
 	}
 
 	return sum / float64(len(nums))
+}
+
+// PrincipalComponent represents a principal component in PCA
+type PrincipalComponent struct {
+	// the vector is the eigenvector of the covariance matrix,
+	// it represents the direction of maximum variance in the data
+	Vector []float64
+
+	// the variance is the eigenvalue of the covariance matrix,
+	// it represents the amount of variance in the data that is
+	// explained by this principal component
+	Variance float64
+}
+
+// PCA finds the the top principal components
+func PCA(m Matrix) []PrincipalComponent {
+	// center the data to have mean 0
+	// this is done by subtracting the mean of each column from the corresponding column entries
+	centeredMatrix := m.Copy()
+	// substract the mean of each column from the corresponding column entries
+	centeredMatrix.Center()
+	covarianceMatrix := centeredMatrix.GetCovarianceMatrix()
+
+	// get the eigenvalues and eigenvectors of the covariance matrix
+	eigenValues := GetEigenvalues(covarianceMatrix.data)
+	eigenVectors := GetEigenvectors(covarianceMatrix.data)
+
+	// sort the eigenvalues and eigenvectors in descending order of eigenvalues
+	type EigenPair struct {
+		Value  float64
+		Vector []complex128
+	}
+	eigenPairs := make([]EigenPair, len(eigenValues))
+	for i := range eigenValues {
+		eigenPairs[i] = EigenPair{
+			Value:  real(eigenValues[i]),
+			Vector: eigenVectors[i],
+		}
+	}
+
+	sort.Slice(eigenPairs, func(i, j int) bool {
+		return eigenPairs[i].Value > eigenPairs[j].Value
+	})
+
+	principalComponents := make([]PrincipalComponent, len(eigenPairs))
+	for i := range eigenPairs {
+		principalComponents[i] = PrincipalComponent{
+			Vector:   complexToRealVector(eigenPairs[i].Vector),
+			Variance: eigenPairs[i].Value,
+		}
+	}
+
+	return principalComponents
 }
