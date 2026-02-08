@@ -1549,6 +1549,30 @@ func (m *Matrix) Center() {
 	m.data = CenterMatrix(*m).data
 }
 
+// GetCovarianceMatrix returns the covariance matrix of the given matrix
+// it centers the matrix and then calculates the covariance matrix using the formula:
+// cov(X) = (X^T * X) / n-1
+func (m Matrix) GetCovarianceMatrix() Matrix {
+	if len(m.data) == 0 {
+		return Matrix{data: [][]float64{}}
+	}
+
+	if len(m.data[0]) == 0 {
+		return Matrix{data: [][]float64{}}
+	}
+
+	centered := CenterMatrix(m)
+	n := float64(len(centered.data))
+	covData := DotProduct(TransposeMatrix(centered.data), centered.data)
+	for i := range covData {
+		for j := range covData[i] {
+			covData[i][j] /= (n - 1)
+		}
+	}
+
+	return Matrix{data: covData}
+}
+
 func CenterMatrix(m Matrix) Matrix {
 	if len(m.data) == 0 {
 		return m
@@ -1586,7 +1610,7 @@ func (m *Matrix) Copy() *Matrix {
 	return newmatrix
 }
 
-func (m *Matrix) DotProduct(matrixB Matrix) Matrix {
+func (m *Matrix) DotProduct(matrixB *Matrix) Matrix {
 	res := DotProduct(m.data, matrixB.data)
 	return Matrix{data: res}
 }
@@ -1647,7 +1671,7 @@ type SVDResult struct {
 
 // SVD performs Singular Value Decomposition on a matrix A
 // It returns matrices U, S, and V such that A = U * S * V^T
-func SVD(m Matrix) SVDResult {
+func SVD(m *Matrix) SVDResult {
 	// compute AtA to find eigenvalues, we need a square matrix
 	AtA := m.DotProduct(m)
 	eigenValues := GetEigenvalues(AtA.data)
@@ -1703,4 +1727,18 @@ func SVD(m Matrix) SVDResult {
 	}
 
 	return svd
+}
+
+// GetMean returns the mean of a slice of float64 numbers
+func GetMean[T float64 | int | int64 | float32](nums []T) float64 {
+	if len(nums) == 0 {
+		return 0
+	}
+
+	var sum float64
+	for i := range nums {
+		sum += float64(nums[i])
+	}
+
+	return sum / float64(len(nums))
 }
