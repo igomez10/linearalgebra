@@ -5255,3 +5255,77 @@ func Test_complexToRealVector(t *testing.T) {
 		})
 	}
 }
+
+func TestSVD(t *testing.T) {
+	type testcase struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		matrix Matrix
+		wantU  Matrix
+		wantS  Matrix
+		wantV  Matrix
+	}
+
+	tests := []testcase{
+		{
+			name: "2x2 matrix",
+			matrix: Matrix{
+				data: [][]float64{
+					{3, 1},
+					{1, 3},
+				},
+			},
+			wantU: Matrix{
+				data: [][]float64{
+					{0.7071, 0.7071},
+					{0.7071, -0.7071},
+				},
+			},
+			wantS: Matrix{data: [][]float64{{4.0, 0}, {0, 2.0}}},
+			wantV: Matrix{
+				data: [][]float64{
+					{0.7071, 0.7071},
+					{0.7071, -0.7071},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svd := SVD(tt.matrix)
+			// check lengths
+			if len(svd.U.data) != len(tt.wantU.data) || len(svd.S.data) != len(tt.wantS.data) || len(svd.V.data) != len(tt.wantV.data) {
+				t.Errorf("SVD() dimensions mismatch: got U %v, S %v, V %v; want U %v, S %v, V %v", svd.U, svd.S, svd.V, tt.wantU, tt.wantS, tt.wantV)
+				return
+			}
+			// Compare U
+			for i := range svd.U.data {
+				for j := range svd.U.data[i] {
+					if math.Abs(svd.U.data[i][j]-tt.wantU.data[i][j]) > 1e-3 {
+						t.Errorf("SVD() U = %v, want %v", svd.U, tt.wantU)
+						return
+					}
+				}
+			}
+			// Compare S
+			for i := range svd.S.data {
+				for j := range svd.S.data[i] {
+					if math.Abs(svd.S.data[i][j]-tt.wantS.data[i][j]) > 1e-3 {
+						t.Errorf("SVD() S = %v, want %v", svd.S, tt.wantS)
+						return
+					}
+				}
+			}
+			// Compare V
+			for i := range svd.V.data {
+				for j := range svd.V.data[i] {
+					if math.Abs(svd.V.data[i][j]-tt.wantV.data[i][j]) > 1e-3 {
+						t.Errorf("SVD() V = %v, want %v", svd.V, tt.wantV)
+						return
+					}
+				}
+			}
+		})
+	}
+}

@@ -1545,6 +1545,11 @@ func (m *Matrix) Transpose() {
 	m.data = TransposeMatrix(m.data)
 }
 
+func (m *Matrix) DotProduct(matrixB Matrix) Matrix {
+	res := DotProduct(m.data, matrixB.data)
+	return Matrix{data: res}
+}
+
 func (m *Matrix) GetColumn(columnIndex int) []float64 {
 	if len(m.data) == 0 {
 		return []float64{}
@@ -1588,8 +1593,73 @@ func validateEigenDecomposition(matrix Matrix, eigenvalue float64, eigenvector [
 	// A * v
 	Av := DotProduct(matrix.data, realEigenMatrix.data)
 	// lambda * v
-	// lambdaV := MultiplyVectorByScalar(TransposeMatrix(realEigenMatrix)[0], eigenvalue)
 	lambdaV := MultiplyVectorByScalar(realEigenMatrix.GetColumn(0), eigenvalue)
 	lambdaVRes := TransposeMatrix([][]float64{lambdaV})
 	return areMatricesEqual(Av, lambdaVRes)
+}
+
+type SVDResult struct {
+	U Matrix
+	S Matrix
+	V Matrix
+}
+
+// SVD performs Singular Value Decomposition on a matrix A
+// It returns matrices U, S, and V such that A = U * S * V^T
+func SVD(m Matrix) SVDResult {
+	// compute AtA to find eigenvalues, we need a square matrix
+	AtA := m.DotProduct(m)
+	eigenValues := GetEigenvalues(AtA.data)
+	singularValues := make([]float64, len(eigenValues))
+	for i, val := range eigenValues {
+		if real(val) < 0 {
+			singularValues[i] = 0
+		} else {
+			singularValues[i] = math.Sqrt(real(val))
+		}
+	}
+
+	// create diagonal matrix S with singular values
+	diagonalScaling := make([][]float64, len(singularValues))
+	// fill with 0s
+	for i := range diagonalScaling {
+		diagonalScaling[i] = make([]float64, len(singularValues))
+	}
+	for i := range singularValues {
+		diagonalScaling[i][i] = singularValues[i]
+	}
+
+	// compute V by finding the eigenvectors of AtA
+	vectors := GetEigenvectors(AtA.data)
+	V := make([][]float64, len(vectors))
+	for i := range vectors {
+		V[i] = make([]float64, len(vectors))
+		for j := range vectors {
+			V[i][j] = real(vectors[i][j])
+		}
+	}
+
+	// compute U as A * V * S^-1
+	SInv := make([][]float64, len(diagonalScaling))
+	for i := range diagonalScaling {
+		SInv[i] = make([]float64, len(diagonalScaling))
+		for j := range diagonalScaling {
+			if diagonalScaling[i][j] != 0 {
+				SInv[i][j] = 1 / diagonalScaling[i][j]
+			} else {
+				SInv[i][j] = 0
+			}
+		}
+	}
+
+	AV := DotProduct(m.data, V)
+	U := DotProduct(AV, SInv)
+
+	svd := SVDResult{
+		U: Matrix{data: U},
+		S: Matrix{data: diagonalScaling},
+		V: Matrix{data: V},
+	}
+
+	return svd
 }
