@@ -1497,3 +1497,25 @@ func solveComplexHomogeneousSystem(A [][]complex128) []complex128 {
 
 	return eigenvector
 }
+
+func compareMatrices(matrixA, matrixB [][]float64) bool {
+	if len(matrixA) != len(matrixB) {
+		return false
+	}
+
+	for i := range len(matrixA) {
+		if len(matrixA[i]) != len(matrixB[i]) {
+			return false
+		}
+	}
+
+	for i := range len(matrixA) {
+		for j := range len(matrixA[i]) {
+			if matrixA[i][j] != matrixB[i][j] {
+				return false
+			}
+		}
+	}
+
+	return true
+}

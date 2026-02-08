@@ -5117,3 +5117,49 @@ func Test_solveComplexHomogeneousSystem(t *testing.T) {
 		})
 	}
 }
+
+func Test_compareMatrices(t *testing.T) {
+	tests := []struct {
+		name    string
+		matrixA [][]float64
+		matrixB [][]float64
+		want    bool
+	}{
+		{
+			name:    "empty matrix",
+			matrixA: [][]float64{},
+			matrixB: [][]float64{},
+			want:    true,
+		},
+		{
+			name:    "diagonal",
+			matrixA: GenerateIdentityMatrix(100),
+			matrixB: GenerateIdentityMatrix(100),
+			want:    true,
+		},
+		{
+			name: "diagonal but one difference",
+			matrixA: func() [][]float64 {
+				a := GenerateIdentityMatrix(100)
+				a[50][50] = 9
+				return a
+			}(),
+			matrixB: GenerateIdentityMatrix(100),
+			want:    false,
+		},
+		{
+			name:    "diff lengths",
+			matrixA: GenerateIdentityMatrix(100),
+			matrixB: GenerateIdentityMatrix(99),
+			want:    false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := compareMatrices(tt.matrixA, tt.matrixB)
+			if got != tt.want {
+				t.Errorf("expected %v got %v", tt.want, got)
+			}
+		})
+	}
+}
