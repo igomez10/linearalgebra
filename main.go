@@ -1498,24 +1498,16 @@ func solveComplexHomogeneousSystem(A [][]complex128) []complex128 {
 	return eigenvector
 }
 
-func compareMatrices(matrixA, matrixB [][]float64) bool {
-	if len(matrixA) != len(matrixB) {
-		return false
-	}
-
-	for i := range len(matrixA) {
-		if len(matrixA[i]) != len(matrixB[i]) {
-			return false
+// eigenvectorsToRealValues converts a matrix of complex eigenvectors
+// to a matrix of real values by taking the real part of each component
+func eigenvectorsToRealValues(matrix [][]complex128) [][]float64 {
+	res := make([][]float64, len(matrix))
+	for i := range res {
+		res[i] = make([]float64, len(matrix[i]))
+		for j := range res[i] {
+			res[i][j] = real(matrix[i][j])
 		}
 	}
 
-	for i := range len(matrixA) {
-		for j := range len(matrixA[i]) {
-			if matrixA[i][j] != matrixB[i][j] {
-				return false
-			}
-		}
-	}
-
-	return true
+	return res
 }

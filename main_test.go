@@ -5137,28 +5137,41 @@ func Test_compareMatrices(t *testing.T) {
 			matrixB: GenerateIdentityMatrix(100),
 			want:    true,
 		},
+
+func Test_eigenvectorsToRealValues(t *testing.T) {
+	tests := []struct {
+		name   string
+		matrix [][]complex128
+		want   [][]float64
+	}{
 		{
-			name: "diagonal but one difference",
-			matrixA: func() [][]float64 {
-				a := GenerateIdentityMatrix(100)
-				a[50][50] = 9
-				return a
-			}(),
-			matrixB: GenerateIdentityMatrix(100),
-			want:    false,
+			name: "simple casse",
+			matrix: [][]complex128{
+				{1, 0},
+				{0, 1},
+			},
+			want: [][]float64{
+				{1, 0},
+				{0, 1},
+			},
 		},
 		{
-			name:    "diff lengths",
-			matrixA: GenerateIdentityMatrix(100),
-			matrixB: GenerateIdentityMatrix(99),
-			want:    false,
+			name: "complex values",
+			matrix: [][]complex128{
+				{complex(0, 1), complex(1, 0)},
+				{complex(0, 1), complex(-1, 0)},
+			},
+			want: [][]float64{
+				{0, 1},
+				{0, -1},
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := compareMatrices(tt.matrixA, tt.matrixB)
-			if got != tt.want {
-				t.Errorf("expected %v got %v", tt.want, got)
+			got := eigenvectorsToRealValues(tt.matrix)
+			if equal := areMatricesEqual(got, tt.want); !equal {
+				t.Errorf("eigenvectorsToRealValues() = %v, want %v", got, tt.want)
 			}
 		})
 	}
