@@ -2,10 +2,12 @@ package linearalgebra
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"io"
 	"math"
 	"math/cmplx"
+	"os"
 	"sort"
 	"strconv"
 )
@@ -1547,6 +1549,42 @@ func (m *Matrix) Transpose() {
 
 func (m *Matrix) Center() {
 	m.data = CenterMatrix(*m).data
+}
+
+// ReadCSVToMatrixFromFile reads a CSV file and returns a Matrix struct
+// For better testing use ReadCSVToMatrix which takes an io.Reader,
+// this way we can use strings.NewReader in tests
+func ReadCSVToMatrixFromFile(filePath string) Matrix {
+	file, err := os.Open(filePath)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	return ReadCSVToMatrix(file)
+}
+
+// ReadCSVToMatrix reads CSV data from an io.Reader and returns a Matrix struct
+func ReadCSVToMatrix(reader io.Reader) Matrix {
+	csvreader := csv.NewReader(reader)
+	records, err := csvreader.ReadAll()
+	if err != nil {
+		panic(err)
+	}
+
+	matrixData := make([][]float64, len(records))
+	for i, record := range records {
+		matrixData[i] = make([]float64, len(record))
+		for j, value := range record {
+			floatVal, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				panic(err)
+			}
+			matrixData[i][j] = floatVal
+		}
+	}
+
+	return Matrix{data: matrixData}
 }
 
 // GetCovarianceMatrix returns the covariance matrix of the given matrix

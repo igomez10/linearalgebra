@@ -6,7 +6,9 @@ import (
 	"io"
 	"math"
 	"math/cmplx"
+	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -5565,6 +5567,95 @@ func TestMatrix_GetCovarianceMatrix(t *testing.T) {
 			got := m.GetCovarianceMatrix()
 			if !areMatricesEqual(got.data, tt.want.data) {
 				t.Errorf("Matrix.GetCovarianceMatrix() = %v, want %v", got.data, tt.want.data)
+			}
+		})
+	}
+}
+
+func TestReadCSVToMatrix(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		reader io.Reader
+		want   Matrix
+	}{
+		{
+			name: "simple 2x2 CSV",
+			reader: strings.NewReader(
+				"1,2\n3,4\n",
+			),
+			want: Matrix{
+				data: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+			},
+		},
+		{
+			name: "simple 3x3 CSV",
+			reader: strings.NewReader(
+				"1,2,3\n4,5,6\n7,8,9\n",
+			),
+			want: Matrix{
+				data: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+				},
+			},
+		},
+		{
+			name: "CSV with empty lines",
+			reader: strings.NewReader(
+				"1,2\n\n3,4\n",
+			),
+			want: Matrix{
+				data: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ReadCSVToMatrix(tt.reader)
+			if !areMatricesEqual(got.data, tt.want.data) {
+				t.Errorf("ReadCSVToMatrix() = %v, want %v", got.data, tt.want.data)
+			}
+		})
+	}
+}
+
+func TestReadCSVToMatrixFromFile(t *testing.T) {
+	// prepare test file /tmp/test_matrix.csv with content:
+	// 1,2
+	// 3,4
+
+	os.WriteFile("/tmp/test_matrix.csv", []byte("1,2\n3,4\n"), 0644)
+
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		filePath string
+		want     Matrix
+	}{
+		{
+			name:     "simple 2x2 CSV file",
+			filePath: "/tmp/test_matrix.csv",
+			want: Matrix{
+				data: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ReadCSVToMatrixFromFile(tt.filePath)
+			if !areMatricesEqual(got.data, tt.want.data) {
+				t.Errorf("ReadCSVToMatrixFromFile() = %v, want %v", got.data, tt.want.data)
 			}
 		})
 	}
