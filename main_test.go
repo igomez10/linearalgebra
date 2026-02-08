@@ -5118,7 +5118,7 @@ func Test_solveComplexHomogeneousSystem(t *testing.T) {
 	}
 }
 
-func Test_eigenvectorsToRealValues(t *testing.T) {
+func Test_complexToReal(t *testing.T) {
 	tests := []struct {
 		name   string
 		matrix [][]complex128
@@ -5149,7 +5149,7 @@ func Test_eigenvectorsToRealValues(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := eigenvectorsToRealValues(tt.matrix)
+			got := complexToReal(tt.matrix)
 			if equal := areMatricesEqual(got, tt.want); !equal {
 				t.Errorf("eigenvectorsToRealValues() = %v, want %v", got, tt.want)
 			}

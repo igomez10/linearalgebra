@@ -1501,9 +1501,9 @@ func solveComplexHomogeneousSystem(A [][]complex128) []complex128 {
 	return eigenvector
 }
 
-// eigenvectorsToRealValues converts a matrix of complex eigenvectors
+// complexToReal converts a matrix of complex eigenvectors
 // to a matrix of real values by taking the real part of each component
-func eigenvectorsToRealValues(matrix [][]complex128) [][]float64 {
+func complexToReal(matrix [][]complex128) [][]float64 {
 	res := make([][]float64, len(matrix))
 	for i := range res {
 		res[i] = make([]float64, len(matrix[i]))
