@@ -5439,3 +5439,68 @@ func TestMatrix_SetIndex(t *testing.T) {
 		})
 	}
 }
+
+func TestCenterMatrix(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		m    Matrix
+		want Matrix
+	}{
+		{
+			name: "center 3x3 matrix",
+			m: Matrix{
+				data: [][]float64{
+					{1, 2, 3},
+					{4, 5, 6},
+					{7, 8, 9},
+					{10, 11, 12},
+				},
+			},
+			want: Matrix{
+				data: [][]float64{
+					{-4.5, -4.5, -4.5},
+					{-1.5, -1.5, -1.5},
+					{1.5, 1.5, 1.5},
+					{4.5, 4.5, 4.5},
+				},
+			},
+		},
+		{
+			name: "center 2x2 matrix",
+			m: Matrix{
+				data: [][]float64{
+					{1, 2},
+					{3, 4},
+				},
+			},
+			want: Matrix{
+				data: [][]float64{
+					{-1, -1},
+					{1, 1},
+				},
+			},
+		},
+		{
+			name: "center 1x1 matrix",
+			m: Matrix{
+				data: [][]float64{
+					{5},
+				},
+			},
+			want: Matrix{
+				data: [][]float64{
+					{0},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := CenterMatrix(tt.m)
+			if !areMatricesEqual(got.data, tt.want.data) {
+				t.Errorf("CenterMatrix() = %v, want %v", got.data, tt.want.data)
+			}
+		})
+	}
+}

@@ -1545,6 +1545,34 @@ func (m *Matrix) Transpose() {
 	m.data = TransposeMatrix(m.data)
 }
 
+func (m *Matrix) Center() {
+	m.data = CenterMatrix(*m).data
+}
+
+func CenterMatrix(m Matrix) Matrix {
+	if len(m.data) == 0 {
+		return m
+	}
+
+	if len(m.data[0]) == 0 {
+		return m
+	}
+
+	centeredData := CopyMatrix(m.data)
+	for col := range centeredData[0] {
+		var sum float64
+		for row := range centeredData {
+			sum += centeredData[row][col]
+		}
+		mean := sum / float64(len(centeredData))
+		for row := range centeredData {
+			centeredData[row][col] -= mean
+		}
+	}
+
+	return Matrix{data: centeredData}
+}
+
 func (m *Matrix) SetIndex(i, j int, value float64) {
 	if i < 0 || i >= len(m.data) || j < 0 || j >= len(m.data[0]) {
 		panic("index out of bounds")
