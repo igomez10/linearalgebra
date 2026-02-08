@@ -1545,6 +1545,14 @@ func (m *Matrix) Transpose() {
 	m.data = TransposeMatrix(m.data)
 }
 
+func (m *Matrix) SetIndex(i, j int, value float64) {
+	if i < 0 || i >= len(m.data) || j < 0 || j >= len(m.data[0]) {
+		panic("index out of bounds")
+	}
+
+	m.data[i][j] = value
+}
+
 func (m *Matrix) Copy() *Matrix {
 	newmatrix := &Matrix{data: CopyMatrix(m.data)}
 	return newmatrix

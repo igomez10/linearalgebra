@@ -5382,3 +5382,60 @@ func TestMatrix_Copy(t *testing.T) {
 		})
 	}
 }
+
+func TestMatrix_SetIndex(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		i          int
+		j          int
+		matrix     Matrix
+		validation func(i, j int, value float64) bool
+		value      float64
+	}{
+		{
+			name:   "set index in 1x1 matrix",
+			i:      0,
+			j:      0,
+			value:  99,
+			matrix: Matrix{data: [][]float64{{0}}},
+			validation: func(i, j int, value float64) bool {
+				return i == 0 && j == 0 && value == 99
+			},
+		},
+		{
+			name:  "set index in 2x2 matrix",
+			i:     1,
+			j:     1,
+			value: -5,
+			matrix: Matrix{data: [][]float64{
+				{0, 0},
+				{0, 0},
+			}},
+			validation: func(i, j int, value float64) bool {
+				return i == 1 && j == 1 && value == -5
+			},
+		},
+		{
+			name:  "set index in non-square matrix",
+			i:     0,
+			j:     2,
+			value: 3.14,
+			matrix: Matrix{data: [][]float64{
+				{0, 0, 0},
+				{0, 0, 0},
+			}},
+			validation: func(i, j int, value float64) bool {
+				return i == 0 && j == 2 && value == 3.14
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.matrix.SetIndex(tt.i, tt.j, tt.value)
+			if !tt.validation(tt.i, tt.j, tt.value) {
+				t.Errorf("Matrix.SetIndex() did not set the value correctly: got %v, want %v", tt.matrix.data, tt.value)
+			}
+		})
+	}
+}
