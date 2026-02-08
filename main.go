@@ -1545,6 +1545,11 @@ func (m *Matrix) Transpose() {
 	m.data = TransposeMatrix(m.data)
 }
 
+func (m *Matrix) Copy() *Matrix {
+	newmatrix := &Matrix{data: CopyMatrix(m.data)}
+	return newmatrix
+}
+
 func (m *Matrix) DotProduct(matrixB Matrix) Matrix {
 	res := DotProduct(m.data, matrixB.data)
 	return Matrix{data: res}

@@ -5329,3 +5329,56 @@ func TestSVD(t *testing.T) {
 		})
 	}
 }
+
+func TestMatrix_Copy(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		want *Matrix
+	}{
+		{
+			name: "copy of empty matrix",
+			want: &Matrix{data: [][]float64{}},
+		},
+		{
+			name: "copy of 1x1 matrix",
+			want: &Matrix{data: [][]float64{{42}}},
+		},
+		{
+			name: "copy of 2x2 matrix",
+			want: &Matrix{data: [][]float64{
+				{1, 2},
+				{3, 4},
+			}},
+		},
+		{
+			name: "copy of 3x3 matrix",
+			want: &Matrix{data: [][]float64{
+				{1, 2, 3},
+				{4, 5, 6},
+				{7, 8, 9},
+			}},
+		},
+		{
+			name: "copy of non-square matrix",
+			want: &Matrix{data: [][]float64{
+				{1, 2, 3},
+				{4, 5, 6},
+			}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			matrix := tt.want.Copy()
+			if !areMatricesEqual(matrix.data, tt.want.data) {
+				t.Errorf("Matrix.Copy() = %v, want %v", matrix.data, tt.want.data)
+			}
+			// Modify the original matrix and check that the copy does not change
+			if len(tt.want.data) > 0 && len(tt.want.data[0]) > 0 {
+				tt.want.data[0][0] = 999
+				if areMatricesEqual(matrix.data, tt.want.data) {
+					t.Errorf("Matrix.Copy() did not create a deep copy: got %v, want %v", matrix.data, tt.want.data)
+				}
+			}
+		})
+	}
+}
