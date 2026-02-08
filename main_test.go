@@ -5260,29 +5260,29 @@ func TestSVD(t *testing.T) {
 	type testcase struct {
 		name string // description of this test case
 		// Named input parameters for target function.
-		matrix Matrix
-		wantU  Matrix
-		wantS  Matrix
-		wantV  Matrix
+		matrix *Matrix
+		wantU  *Matrix
+		wantS  *Matrix
+		wantV  *Matrix
 	}
 
 	tests := []testcase{
 		{
 			name: "2x2 matrix",
-			matrix: Matrix{
+			matrix: &Matrix{
 				data: [][]float64{
 					{3, 1},
 					{1, 3},
 				},
 			},
-			wantU: Matrix{
+			wantU: &Matrix{
 				data: [][]float64{
 					{0.7071, 0.7071},
 					{0.7071, -0.7071},
 				},
 			},
-			wantS: Matrix{data: [][]float64{{4.0, 0}, {0, 2.0}}},
-			wantV: Matrix{
+			wantS: &Matrix{data: [][]float64{{4.0, 0}, {0, 2.0}}},
+			wantV: &Matrix{
 				data: [][]float64{
 					{0.7071, 0.7071},
 					{0.7071, -0.7071},
@@ -5500,6 +5500,71 @@ func TestCenterMatrix(t *testing.T) {
 			got := CenterMatrix(tt.m)
 			if !areMatricesEqual(got.data, tt.want.data) {
 				t.Errorf("CenterMatrix() = %v, want %v", got.data, tt.want.data)
+			}
+		})
+	}
+}
+
+func TestMatrix_GetCovarianceMatrix(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for receiver constructor.
+		m    Matrix
+		want Matrix
+	}{
+		{
+			name: "covariance of centered 3x3 matrix",
+			m: Matrix{
+				data: [][]float64{
+					{-4.5, -4.5, -4.5},
+					{-1.5, -1.5, -1.5},
+					{1.5, 1.5, 1.5},
+					{4.5, 4.5, 4.5},
+				},
+			},
+			want: Matrix{
+				data: [][]float64{
+					{15, 15, 15},
+					{15, 15, 15},
+					{15, 15, 15},
+				},
+			},
+		},
+		{
+			name: "covariance of centered 2x2 matrix",
+			m: Matrix{
+				data: [][]float64{
+					{-1, -1},
+					{1, 1},
+				},
+			},
+			want: Matrix{
+				data: [][]float64{
+					{2, 2},
+					{2, 2},
+				},
+			},
+		},
+		{
+			name: "covariance of centered 1x1 matrix",
+			m: Matrix{
+				data: [][]float64{
+					{0},
+				},
+			},
+			want: Matrix{
+				data: [][]float64{
+					{0},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := CenterMatrix(tt.m)
+			got := m.GetCovarianceMatrix()
+			if !areMatricesEqual(got.data, tt.want.data) {
+				t.Errorf("Matrix.GetCovarianceMatrix() = %v, want %v", got.data, tt.want.data)
 			}
 		})
 	}
