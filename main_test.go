@@ -5118,26 +5118,6 @@ func Test_solveComplexHomogeneousSystem(t *testing.T) {
 	}
 }
 
-func Test_compareMatrices(t *testing.T) {
-	tests := []struct {
-		name    string
-		matrixA [][]float64
-		matrixB [][]float64
-		want    bool
-	}{
-		{
-			name:    "empty matrix",
-			matrixA: [][]float64{},
-			matrixB: [][]float64{},
-			want:    true,
-		},
-		{
-			name:    "diagonal",
-			matrixA: GenerateIdentityMatrix(100),
-			matrixB: GenerateIdentityMatrix(100),
-			want:    true,
-		},
-
 func Test_eigenvectorsToRealValues(t *testing.T) {
 	tests := []struct {
 		name   string
