@@ -5156,3 +5156,102 @@ func Test_complexToReal(t *testing.T) {
 		})
 	}
 }
+
+func TestConfirmEigenvaluesAndEigenvectors(t *testing.T) {
+	type testCase struct {
+		name        string
+		matrix      Matrix
+		eigenvalue  complex128
+		eigenvector []complex128
+		expect      bool
+	}
+
+	tests := []testCase{
+		{
+			name: "2x2 matrix with distinct real eigenvalues",
+			matrix: Matrix{
+				data: [][]float64{
+					{4, 2},
+					{1, 3},
+				},
+			},
+			eigenvalue: 5,
+			eigenvector: []complex128{
+				complex(2, 0), complex(1, 0),
+			},
+			expect: true,
+		},
+		{
+			name: "2x2 matrix with distinct real eigenvalues",
+			matrix: Matrix{
+				data: [][]float64{
+					{4, 2},
+					{1, 3},
+				},
+			},
+			eigenvalue: 2,
+			eigenvector: []complex128{
+				complex(-1, 0), complex(1, 0),
+			},
+			expect: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if validateEigenDecomposition(tc.matrix, real(tc.eigenvalue), tc.eigenvector) != tc.expect {
+				t.Errorf("validateEigenDecomposition() = %v, want %v", !tc.expect, tc.expect)
+			}
+		})
+	}
+}
+
+func Test_complexToRealVector(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		vector []complex128
+		want   []float64
+	}{
+		{
+			name: "simple case",
+			vector: []complex128{
+				complex(1, 0),
+				complex(0, 1),
+			},
+			want: []float64{1, 0},
+		},
+		{
+			name: "complex values",
+			vector: []complex128{
+				complex(0, 1),
+				complex(0, -1),
+			},
+			want: []float64{0, 0},
+		},
+		{
+			name: "mixed values",
+			vector: []complex128{
+				complex(1, 1),
+				complex(1, -1),
+			},
+			want: []float64{1, 1},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := complexToRealVector(tt.vector)
+			if len(got) != len(tt.want) {
+				t.Errorf("complexToRealVector() = %v, want %v", got, tt.want)
+				return
+			}
+			for i := range got {
+				diff := math.Abs(got[i] - tt.want[i])
+				if diff > 1e-6 {
+					t.Errorf("complexToRealVector() = %v, want %v", got, tt.want)
+					return
+				}
+			}
+		})
+	}
+}

@@ -922,19 +922,32 @@ func GetCofactorMatrix(matrix [][]float64) [][]float64 {
 // TransposeMatrix returns the transpose of a given matrix
 // The transpose of a matrix is obtained by swapping the rows and columns in a way that
 // the first row becomes the first column, the second row becomes the second column, and so on
-func TransposeMatrix(matrix [][]float64) [][]float64 {
+func TransposeMatrix[T any](matrix [][]T) [][]T {
 	if len(matrix) == 0 {
 		return matrix
 	}
-	newmatrix := [][]float64{}
+	newmatrix := [][]T{}
 	for col := 0; col < len(matrix[0]); col++ {
-		newRow := []float64{}
+		newRow := []T{}
 		for row := 0; row < len(matrix); row++ {
 			newRow = append(newRow, matrix[row][col])
 		}
 		newmatrix = append(newmatrix, newRow)
 	}
 	return newmatrix
+}
+
+func RowToColumnVector[T any](vector []T) [][]T {
+	if len(vector) == 0 {
+		return [][]T{}
+	}
+
+	transposed := [][]T{}
+	for i := range vector {
+		transposed = append(transposed, []T{vector[i]})
+	}
+
+	return transposed
 }
 
 // GetAdjugateMatrix returns the adjugate matrix of a given matrix
@@ -1513,4 +1526,70 @@ func complexToReal(matrix [][]complex128) [][]float64 {
 	}
 
 	return res
+}
+
+func complexToRealVector(vector []complex128) []float64 {
+	res := make([]float64, len(vector))
+	for i := range res {
+		res[i] = real(vector[i])
+	}
+
+	return res
+}
+
+type Matrix struct {
+	data [][]float64
+}
+
+func (m *Matrix) Transpose() {
+	m.data = TransposeMatrix(m.data)
+}
+
+func (m *Matrix) GetColumn(columnIndex int) []float64 {
+	if len(m.data) == 0 {
+		return []float64{}
+	}
+	column := make([]float64, len(m.data))
+	for i := range m.data {
+		column[i] = m.data[i][columnIndex]
+	}
+	return column
+}
+
+func (m *Matrix) Append(other Matrix) Matrix {
+	if len(m.data) == 0 {
+		return other
+	}
+	if len(other.data) == 0 {
+		return *m
+	}
+	appendedData := make([][]float64, len(m.data))
+	for i := range m.data {
+		appendedData[i] = append(m.data[i], other.data[i]...)
+	}
+	return Matrix{data: appendedData}
+}
+
+func (m *Matrix) GetRow(rowIndex int) []float64 {
+	if len(m.data) == 0 {
+		return []float64{}
+	}
+	return m.data[rowIndex]
+}
+
+// validateEigenDecomposition will validate if
+// A * eigenvector = eivenValue * eigenvector
+// A * v = lambda * v
+func validateEigenDecomposition(matrix Matrix, eigenvalue float64, eigenvector []complex128) bool {
+	realEigen := complexToRealVector(eigenvector)
+
+	realEigenMatrix := Matrix{data: [][]float64{realEigen}}
+	realEigenMatrix.Transpose()
+	// A * v
+	Av := DotProduct(matrix.data, realEigenMatrix.data)
+	// lambda * v
+	// lambdaV := MultiplyVectorByScalar(TransposeMatrix(realEigenMatrix)[0], eigenvalue)
+	lambdaV := MultiplyVectorByScalar(realEigenMatrix.GetColumn(0), eigenvalue)
+	lambdaVRes := TransposeMatrix([][]float64{lambdaV})
+	return areMatricesEqual(Av, lambdaVRes)
 }
