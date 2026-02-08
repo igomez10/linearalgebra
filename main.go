@@ -579,6 +579,9 @@ func areVectorsLinearlyIndependentByCauchySchwarz(vectorA, vectorB []float64) bo
 	return true
 }
 
+// areMatricesEqual will check if two matrices are equal by
+// checking if they have the same dimensions and if all their
+// components are equal
 func areMatricesEqual(matrixA, matrixB [][]float64) bool {
 	if len(matrixA) != len(matrixB) {
 		return false
