@@ -23,41 +23,64 @@ import (
 // Repeat steps 2-4 for the next leftmost nonzero entry until all the leading entries are 1.
 // Swap the rows so that the leading entry of each nonzero row is to the right of the leading entry of the row above it.
 func ToRowReducedEchelonForm(pMatrix [][]float64) [][]float64 {
-	// Swap the rows so that all rows with all zero entries are on the bottom
 	matrix := CopyMatrix(pMatrix)
-	matrix = SwapRows0sToBottom(matrix)
+	rows := len(matrix)
+	if rows == 0 {
+		return matrix
+	}
+	cols := len(matrix[0])
+	const tol = 1e-10
 
-	// Add/subtract multiples of the top row to the other rows so that all other
-	// entries in the column containing the top row's leading entry are all zero.
-	for i := 0; i < len(matrix); i++ {
-		for j := 0; j < len(matrix[i]); j++ {
-			// find non 0
-			if !NearlyEqual(matrix[i][j], 0, 3) {
-				// make this row pivot row
-				matrix = MultiplyRowByScalar(matrix, i, float64(1/matrix[i][j]))
+	pivotRow := 0
+	for col := 0; col < cols && pivotRow < rows; col++ {
+		// Partial pivoting: find row with largest absolute value in this column
+		bestRow := pivotRow
+		bestVal := math.Abs(matrix[pivotRow][col])
+		for r := pivotRow + 1; r < rows; r++ {
+			if v := math.Abs(matrix[r][col]); v > bestVal {
+				bestVal = v
+				bestRow = r
+			}
+		}
 
-				// turn every column in this pivot to 0
-				for z := 0; z < len(matrix); z++ {
-					if z == i {
-						continue
-					}
+		if bestVal < tol {
+			continue
+		}
 
-					if !NearlyEqual(matrix[z][j], 0, 3) {
-						tmp := matrix[z][j]
-						matrix = MultiplyRowByScalar(matrix, i, -matrix[z][j])
-						matrix = AddRowToRow(matrix, matrix[i], z)
-						matrix = MultiplyRowByScalar(matrix, i, float64(1/-tmp))
-					}
-				}
-				break
+		// Swap rows
+		matrix[pivotRow], matrix[bestRow] = matrix[bestRow], matrix[pivotRow]
+
+		// Scale pivot row so leading entry becomes 1
+		scale := matrix[pivotRow][col]
+		for j := col; j < cols; j++ {
+			matrix[pivotRow][j] /= scale
+		}
+
+		// Eliminate all other entries in this column
+		for r := 0; r < rows; r++ {
+			if r == pivotRow {
+				continue
+			}
+			if math.Abs(matrix[r][col]) < tol {
+				continue
+			}
+			factor := matrix[r][col]
+			for j := col; j < cols; j++ {
+				matrix[r][j] -= factor * matrix[pivotRow][j]
+			}
+		}
+
+		pivotRow++
+	}
+
+	// Clean up near-zero entries
+	for i := range matrix {
+		for j := range matrix[i] {
+			if math.Abs(matrix[i][j]) < tol {
+				matrix[i][j] = 0
 			}
 		}
 	}
-
-	// turn current row into pivot row by multiplying by the inverse of the leading entry
-	// make every entry in the column of the leading entry 0
-	// find next pivot and do the same
-	matrix = SwapLargetsLeftmostNonzeroEntry(matrix)
 
 	return matrix
 }
@@ -335,7 +358,7 @@ func GetPivotEntries(matrix [][]float64) [][]int {
 	i := 0
 	j := 0
 	for i < len(matrix) && j < len(matrix[i]) {
-		if !NearlyEqual(matrix[i][j], 0, 3) {
+		if math.Abs(matrix[i][j]) > 1e-10 {
 			answer = append(answer, []int{i, j})
 			i++
 		}
@@ -1198,15 +1221,56 @@ func GetEigenvalues(matrix [][]float64) []complex128 {
 		}
 	}
 
-	// For larger matrices, we can use the QR algorithm.
-	// This simple implementation drives the matrix toward real Schur form
-	// (quasi-upper-triangular with 1x1 and 2x2 blocks). We'll then extract
-	// eigenvalues from the resulting 1x1/2x2 blocks so complex pairs are handled.
+	// QR algorithm with Wilkinson shift and convergence check.
+	// Drives the matrix toward real Schur form (quasi-upper-triangular).
 	A := CopyMatrix(matrix)
 	n := len(A)
-	for iter := 0; iter < 1000; iter++ {
+	for iter := 0; iter < 2000; iter++ {
+		// Convergence check: stop when all subdiagonal elements are small
+		converged := true
+		for i := 0; i < n-1; i++ {
+			if math.Abs(A[i+1][i]) > 1e-12*(math.Abs(A[i][i])+math.Abs(A[i+1][i+1])+1e-30) {
+				converged = false
+				break
+			}
+		}
+		if converged {
+			break
+		}
+
+		// Wilkinson shift: use eigenvalue of bottom-right 2x2 block closest to A[n-1][n-1]
+		shift := 0.0
+		if n >= 2 {
+			a11 := A[n-2][n-2]
+			a12 := A[n-2][n-1]
+			a21 := A[n-1][n-2]
+			a22 := A[n-1][n-1]
+			tr := a11 + a22
+			det := a11*a22 - a12*a21
+			disc := tr*tr - 4*det
+			if disc >= 0 {
+				sqrtDisc := math.Sqrt(disc)
+				lambda1 := 0.5 * (tr + sqrtDisc)
+				lambda2 := 0.5 * (tr - sqrtDisc)
+				if math.Abs(lambda1-a22) < math.Abs(lambda2-a22) {
+					shift = lambda1
+				} else {
+					shift = lambda2
+				}
+			} else {
+				shift = a22
+			}
+		}
+
+		// Apply shift
+		for i := 0; i < n; i++ {
+			A[i][i] -= shift
+		}
 		Q, R := qrDecomposition(A)
 		A = DotProduct(R, Q)
+		for i := 0; i < n; i++ {
+			A[i][i] += shift
+		}
 	}
 
 	// Zero-out tiny subdiagonal elements for robust block detection
@@ -1249,7 +1313,7 @@ func GetEigenvalues(matrix [][]float64) []complex128 {
 }
 
 // qrDecomposition performs QR decomposition of matrix A
-// using the Gram-Schmidt process
+// using Modified Gram-Schmidt for improved numerical stability
 // A = QR where Q is orthogonal and R is upper triangular
 func qrDecomposition(A [][]float64) ([][]float64, [][]float64) {
 	m := len(A)
@@ -1264,15 +1328,21 @@ func qrDecomposition(A [][]float64) ([][]float64, [][]float64) {
 		R[i] = make([]float64, n)
 	}
 
+	// Copy columns of A into Q
 	for j := 0; j < n; j++ {
 		for i := 0; i < m; i++ {
 			Q[i][j] = A[i][j]
 		}
+	}
+
+	for j := 0; j < n; j++ {
+		// Modified Gram-Schmidt: project against already-orthogonalized columns
 		for k := 0; k < j; k++ {
 			var dot float64
 			for i := 0; i < m; i++ {
-				dot += Q[i][k] * A[i][j]
+				dot += Q[i][k] * Q[i][j]
 			}
+			R[k][j] = dot
 			for i := 0; i < m; i++ {
 				Q[i][j] -= dot * Q[i][k]
 			}
@@ -1282,15 +1352,11 @@ func qrDecomposition(A [][]float64) ([][]float64, [][]float64) {
 			norm += Q[i][j] * Q[i][j]
 		}
 		norm = math.Sqrt(norm)
-		for i := 0; i < m; i++ {
-			Q[i][j] /= norm
-		}
-		for k := 0; k <= j; k++ {
-			var dot float64
+		R[j][j] = norm
+		if norm > 1e-14 {
 			for i := 0; i < m; i++ {
-				dot += Q[i][k] * A[i][j]
+				Q[i][j] /= norm
 			}
-			R[k][j] = dot
 		}
 	}
 
@@ -1349,26 +1415,109 @@ func computeEigenspace(matrix [][]float64, lambda complex128, n int) [][]complex
 	return computeComplexEigenspace(matrix, lambda, n)
 }
 
-// computeRealEigenspace solves (A - λI)v = 0 for real eigenvalue λ
+// computeRealEigenspace solves (A - λI)v = 0 for real eigenvalue λ.
+// Uses inverse iteration with deflation to find multiple eigenvectors for repeated eigenvalues.
 func computeRealEigenspace(matrix [][]float64, lambda float64, n int) [][]complex128 {
-	// Form (A - λI)
-	AminusLambdaI := CopyMatrix(matrix)
+	// Determine geometric multiplicity from rank of (A - λI)
+	AminusLI := CopyMatrix(matrix)
 	for i := 0; i < n; i++ {
-		AminusLambdaI[i][i] -= lambda
+		AminusLI[i][i] -= lambda
+	}
+	rref := ToRowReducedEchelonForm(AminusLI)
+	pivots := GetPivotEntries(rref)
+	rank := len(pivots)
+	geomMult := n - rank
+	if geomMult < 1 {
+		geomMult = 1
 	}
 
-	// Find null space vectors
-	nullSpace := GetNullSpaceOfMatrix(AminusLambdaI)
+	eigenspace := make([][]complex128, 0, geomMult)
+	foundVecs := make([][]float64, 0, geomMult)
 
-	// Convert null space vectors to complex and normalize
-	eigenspace := make([][]complex128, len(nullSpace))
-	for i, vec := range nullSpace {
+	for k := 0; k < geomMult; k++ {
+		// Find eigenvector via inverse iteration
+		vec := inverseIteration(matrix, lambda, n)
+
+		// If we already have eigenvectors, orthogonalize against them
+		if len(foundVecs) > 0 {
+			// Deflate: use inverse iteration with a starting vector
+			// orthogonal to already-found eigenvectors
+			// Try unit vectors as starting points
+			var bestVec []float64
+			bestResidual := math.Inf(1)
+			for startIdx := 0; startIdx < n; startIdx++ {
+				x0 := make([]float64, n)
+				x0[startIdx] = 1.0
+				// Orthogonalize starting vector against found eigenvectors
+				for _, fv := range foundVecs {
+					dot := 0.0
+					for i := 0; i < n; i++ {
+						dot += x0[i] * fv[i]
+					}
+					for i := 0; i < n; i++ {
+						x0[i] -= dot * fv[i]
+					}
+				}
+				norm := 0.0
+				for _, v := range x0 {
+					norm += v * v
+				}
+				norm = math.Sqrt(norm)
+				if norm < 1e-10 {
+					continue
+				}
+				for i := range x0 {
+					x0[i] /= norm
+				}
+				candidate := inverseIterationWithStart(matrix, lambda, n, x0)
+				// Orthogonalize candidate against found vectors
+				for _, fv := range foundVecs {
+					dot := 0.0
+					for i := 0; i < n; i++ {
+						dot += candidate[i] * fv[i]
+					}
+					for i := 0; i < n; i++ {
+						candidate[i] -= dot * fv[i]
+					}
+				}
+				norm = 0.0
+				for _, v := range candidate {
+					norm += v * v
+				}
+				norm = math.Sqrt(norm)
+				if norm < 1e-10 {
+					continue
+				}
+				for i := range candidate {
+					candidate[i] /= norm
+				}
+				// Compute residual
+				residual := 0.0
+				for i := 0; i < n; i++ {
+					av := 0.0
+					for j := 0; j < n; j++ {
+						av += matrix[i][j] * candidate[j]
+					}
+					d := av - lambda*candidate[i]
+					residual += d * d
+				}
+				if residual < bestResidual {
+					bestResidual = residual
+					bestVec = candidate
+				}
+			}
+			if bestVec != nil {
+				vec = bestVec
+			}
+		}
+
+		foundVecs = append(foundVecs, vec)
 		eigenvector := make([]complex128, n)
 		for j := 0; j < n; j++ {
 			eigenvector[j] = complex(vec[j], 0)
 		}
 		normalizeEigenvector(eigenvector)
-		eigenspace[i] = eigenvector
+		eigenspace = append(eigenspace, eigenvector)
 	}
 
 	return eigenspace
@@ -1835,4 +1984,172 @@ func PCA(m Matrix) []PrincipalComponent {
 	}
 
 	return principalComponents
+}
+
+// solveLinearSystem solves Ax = b using Gaussian elimination with partial pivoting.
+// Returns the solution vector x.
+// solveLinearSystem is used in inverse iteration to solve (A - σI)y = x at each step.
+// this is useful when we want to find the eigenvector corresponding to an eigenvalue close to sigma.
+func solveLinearSystem(A [][]float64, b []float64) []float64 {
+	n := len(A)
+	// Build augmented matrix [A|b]
+	aug := make([][]float64, n)
+	for i := 0; i < n; i++ {
+		aug[i] = make([]float64, n+1)
+		copy(aug[i], A[i])
+		aug[i][n] = b[i]
+	}
+
+	// Forward elimination with partial pivoting
+	for col := 0; col < n; col++ {
+		// Find pivot
+		bestRow := col
+		bestVal := math.Abs(aug[col][col])
+		for r := col + 1; r < n; r++ {
+			if v := math.Abs(aug[r][col]); v > bestVal {
+				bestVal = v
+				bestRow = r
+			}
+		}
+		aug[col], aug[bestRow] = aug[bestRow], aug[col]
+
+		pivot := aug[col][col]
+		if math.Abs(pivot) < 1e-15 {
+			continue
+		}
+
+		for r := col + 1; r < n; r++ {
+			factor := aug[r][col] / pivot
+			for j := col; j <= n; j++ {
+				aug[r][j] -= factor * aug[col][j]
+			}
+		}
+	}
+
+	// Back substitution
+	x := make([]float64, n)
+	for i := n - 1; i >= 0; i-- {
+		sum := aug[i][n]
+		for j := i + 1; j < n; j++ {
+			sum -= aug[i][j] * x[j]
+		}
+		if math.Abs(aug[i][i]) > 1e-15 {
+			x[i] = sum / aug[i][i]
+		}
+	}
+
+	return x
+}
+
+// inverseIteration computes the eigenvector for the eigenvalue closest to sigma
+// by repeatedly solving (A - σI)y = x and normalizing.
+// inverseIterationWithStart computes the eigenvector for the eigenvalue closest to sigma
+// by repeatedly solving (A - σI)y = x and normalizing, starting from the given vector.
+func inverseIterationWithStart(A [][]float64, sigma float64, n int, x0 []float64) []float64 {
+	// Form (A - σI) with a small perturbation to avoid exact singularity
+	shifted := make([][]float64, n)
+	for i := 0; i < n; i++ {
+		shifted[i] = make([]float64, n)
+		copy(shifted[i], A[i])
+		shifted[i][i] -= sigma + 1e-10
+	}
+
+	x := make([]float64, n)
+	copy(x, x0)
+
+	for iter := 0; iter < 30; iter++ {
+		y := solveLinearSystem(shifted, x)
+
+		// Normalize
+		norm := 0.0
+		for _, v := range y {
+			norm += v * v
+		}
+		norm = math.Sqrt(norm)
+		if norm < 1e-15 {
+			break
+		}
+		for i := range y {
+			y[i] /= norm
+		}
+
+		// Check convergence: |y - x| or |y + x| small (sign may flip)
+		diffPlus := 0.0
+		diffMinus := 0.0
+		for i := range y {
+			dp := y[i] - x[i]
+			dm := y[i] + x[i]
+			diffPlus += dp * dp
+			diffMinus += dm * dm
+		}
+		x = y
+		if math.Min(diffPlus, diffMinus) < 1e-14 {
+			break
+		}
+	}
+
+	return x
+}
+
+// inverseIteration computes the eigenvector for the eigenvalue closest to sigma.
+// It tries multiple starting vectors to avoid unlucky starts orthogonal to the eigenvector.
+func inverseIteration(A [][]float64, sigma float64, n int) []float64 {
+	// Try several starting vectors with different symmetry patterns
+	starts := make([][]float64, 3)
+	for s := range starts {
+		starts[s] = make([]float64, n)
+	}
+	// Start 0: [1, 2, 3, ...] normalized
+	for i := 0; i < n; i++ {
+		starts[0][i] = float64(i + 1)
+	}
+	// Start 1: [1, -1, 1, -1, ...] normalized
+	for i := 0; i < n; i++ {
+		if i%2 == 0 {
+			starts[1][i] = 1
+		} else {
+			starts[1][i] = -1
+		}
+	}
+	// Start 2: [n, n-1, ..., 1] normalized
+	for i := 0; i < n; i++ {
+		starts[2][i] = float64(n - i)
+	}
+
+	// Normalize starting vectors
+	for s := range starts {
+		norm := 0.0
+		for _, v := range starts[s] {
+			norm += v * v
+		}
+		norm = math.Sqrt(norm)
+		for i := range starts[s] {
+			starts[s][i] /= norm
+		}
+	}
+
+	// Run inverse iteration from each start and pick the best result
+	// (smallest residual |Av - σv|)
+	var bestVec []float64
+	bestResidual := math.Inf(1)
+
+	for _, x0 := range starts {
+		vec := inverseIterationWithStart(A, sigma, n, x0)
+		// Compute residual: ||Av - σv||
+		residual := 0.0
+		for i := 0; i < n; i++ {
+			av := 0.0
+			for j := 0; j < n; j++ {
+				av += A[i][j] * vec[j]
+			}
+			d := av - sigma*vec[i]
+			residual += d * d
+		}
+		if residual < bestResidual {
+			bestResidual = residual
+			bestVec = vec
+		}
+	}
+
+	return bestVec
 }

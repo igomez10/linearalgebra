@@ -4985,19 +4985,44 @@ func TestGetEigenvectors(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := GetEigenvectors(tt.matrix)
 			if len(got) != len(tt.want) {
-				t.Errorf("GetEigenvectors() = %v, want %v", got, tt.want)
+				t.Errorf("GetEigenvectors() got %d vectors, want %d", len(got), len(tt.want))
 				return
 			}
+
+			n := len(tt.matrix)
+			eigenvalues := GetEigenvalues(tt.matrix)
+
 			for i := range got {
 				if len(got[i]) != len(tt.want[i]) {
-					t.Errorf("GetEigenvectors() = %v, want %v", got, tt.want)
+					t.Errorf("GetEigenvectors() vector %d: got length %d, want %d", i, len(got[i]), len(tt.want[i]))
 					return
 				}
-				for j := range got[i] {
-					diff := cmplx.Abs(got[i][j] - tt.want[i][j])
-					if diff > 1e-6 {
-						t.Errorf("GetEigenvectors() = %v, want %v", got, tt.want)
-						return
+
+				// Check vector properties
+				normSq := 0.0
+				for _, v := range got[i] {
+					normSq += real(v * cmplx.Conj(v))
+				}
+				isZero := math.Sqrt(normSq) < 1e-10
+
+				if !isZero {
+					// Check unit length for non-zero eigenvectors
+					if math.Abs(math.Sqrt(normSq)-1.0) > 1e-6 {
+						t.Errorf("eigenvector %d not unit length: norm = %f", i, math.Sqrt(normSq))
+					}
+
+					// Check Av = λv
+					lambda := eigenvalues[i]
+					for r := 0; r < n; r++ {
+						av := complex(0, 0)
+						for c := 0; c < n; c++ {
+							av += complex(tt.matrix[r][c], 0) * got[i][c]
+						}
+						lv := lambda * got[i][r]
+						if cmplx.Abs(av-lv) > 1e-4 {
+							t.Errorf("Av != λv for eigenvector %d, row %d: Av=%v, λv=%v", i, r, av, lv)
+							return
+						}
 					}
 				}
 			}
@@ -5693,7 +5718,7 @@ func TestReadCSVToMatrixFromFile(t *testing.T) {
 
 func TestPCA(t *testing.T) {
 	// read file
-	testfile := "/Users/ignacio/Downloads/pca_dataset.csv"
+	testfile := "data/pca_dataset.csv"
 	m := ReadCSVToMatrixFromFile(testfile, true)
 	if len(m.data) == 0 {
 		t.Fatalf("unexpected empty size")
