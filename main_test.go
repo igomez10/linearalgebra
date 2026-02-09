@@ -5729,7 +5729,313 @@ func TestPCA(t *testing.T) {
 		fmt.Println("Principal Component", i+1)
 		fmt.Printf(" variance explained by this component: %f\n", pcs[i].Variance)
 		for j := range pcs[i].Vector {
-			fmt.Printf("  %f\n", pcs[i].Vector[j])
+			fmt.Printf("%.2f,", pcs[i].Vector[j])
 		}
+		fmt.Printf("\n")
+	}
+}
+
+func TestPCAProperties(t *testing.T) {
+	testfile := "data/pca_dataset.csv"
+	m := ReadCSVToMatrixFromFile(testfile, true)
+	if len(m.data) == 0 {
+		t.Fatalf("unexpected empty matrix")
+	}
+
+	pcs := PCA(m)
+	n := len(pcs)
+	if n == 0 {
+		t.Fatalf("PCA returned no components")
+	}
+
+	// Build covariance matrix for Av = λv check
+	centered := CenterMatrix(m)
+	nSamples := float64(len(centered.data))
+	covData := DotProduct(TransposeMatrix(centered.data), centered.data)
+	for i := range covData {
+		for j := range covData[i] {
+			covData[i][j] /= (nSamples - 1)
+		}
+	}
+
+	t.Run("eigenvalues_non_negative", func(t *testing.T) {
+		for i, pc := range pcs {
+			if pc.Variance < -1e-6 {
+				t.Errorf("component %d has negative variance: %f", i, pc.Variance)
+			}
+		}
+	})
+
+	t.Run("eigenvectors_unit_length", func(t *testing.T) {
+		for i, pc := range pcs {
+			norm := 0.0
+			for _, v := range pc.Vector {
+				norm += v * v
+			}
+			norm = math.Sqrt(norm)
+			if math.Abs(norm-1.0) > 1e-6 {
+				t.Errorf("component %d has norm %f, want 1.0", i, norm)
+			}
+		}
+	})
+
+	t.Run("eigenvectors_orthogonal", func(t *testing.T) {
+		for i := 0; i < n; i++ {
+			for j := i + 1; j < n; j++ {
+				dot := 0.0
+				for k := range pcs[i].Vector {
+					dot += pcs[i].Vector[k] * pcs[j].Vector[k]
+				}
+				if math.Abs(dot) > 1e-4 {
+					t.Errorf("components %d and %d are not orthogonal: dot = %f", i, j, dot)
+				}
+			}
+		}
+	})
+
+	t.Run("variances_sorted_descending", func(t *testing.T) {
+		for i := 1; i < n; i++ {
+			if pcs[i].Variance > pcs[i-1].Variance+1e-6 {
+				t.Errorf("variances not sorted: component %d (%f) > component %d (%f)",
+					i, pcs[i].Variance, i-1, pcs[i-1].Variance)
+			}
+		}
+	})
+
+	t.Run("Av_equals_lambda_v", func(t *testing.T) {
+		dim := len(covData)
+		for i, pc := range pcs {
+			if len(pc.Vector) != dim {
+				t.Errorf("component %d has wrong dimension: %d vs %d", i, len(pc.Vector), dim)
+				continue
+			}
+			// Compute Av
+			av := make([]float64, dim)
+			for r := 0; r < dim; r++ {
+				for c := 0; c < dim; c++ {
+					av[r] += covData[r][c] * pc.Vector[c]
+				}
+			}
+			// Compute λv
+			lv := make([]float64, dim)
+			for r := 0; r < dim; r++ {
+				lv[r] = pc.Variance * pc.Vector[r]
+			}
+			// Check ||Av - λv|| is small relative to λ
+			diffNorm := 0.0
+			for r := 0; r < dim; r++ {
+				d := av[r] - lv[r]
+				diffNorm += d * d
+			}
+			diffNorm = math.Sqrt(diffNorm)
+			scale := math.Abs(pc.Variance) + 1e-10
+			if diffNorm/scale > 0.01 {
+				t.Errorf("component %d: ||Av - λv|| / |λ| = %f (too large)", i, diffNorm/scale)
+			}
+		}
+	})
+}
+
+func TestSolveLinearSystem(t *testing.T) {
+	tests := []struct {
+		name string
+		A    [][]float64
+		b    []float64
+		want []float64
+	}{
+		{
+			name: "1x1 system",
+			A:    [][]float64{{5}},
+			b:    []float64{10},
+			want: []float64{2},
+		},
+		{
+			name: "2x2 identity",
+			A:    [][]float64{{1, 0}, {0, 1}},
+			b:    []float64{3, 7},
+			want: []float64{3, 7},
+		},
+		{
+			name: "2x2 diagonal",
+			A:    [][]float64{{2, 0}, {0, 4}},
+			b:    []float64{6, 12},
+			want: []float64{3, 3},
+		},
+		{
+			name: "2x2 general",
+			A:    [][]float64{{1, 2}, {3, 4}},
+			b:    []float64{5, 11},
+			want: []float64{1, 2},
+		},
+		{
+			name: "2x2 requires pivoting",
+			A:    [][]float64{{0, 1}, {1, 0}},
+			b:    []float64{4, 5},
+			want: []float64{5, 4},
+		},
+		{
+			name: "3x3 upper triangular",
+			A:    [][]float64{{1, 2, 3}, {0, 1, 4}, {0, 0, 1}},
+			b:    []float64{14, 9, 2},
+			want: []float64{6, 1, 2},
+		},
+		{
+			name: "3x3 general",
+			A:    [][]float64{{2, 1, -1}, {-3, -1, 2}, {-2, 1, 2}},
+			b:    []float64{8, -11, -3},
+			want: []float64{2, 3, -1},
+		},
+		{
+			name: "3x3 symmetric positive definite",
+			A:    [][]float64{{4, 2, 1}, {2, 5, 3}, {1, 3, 6}},
+			b:    []float64{7, 10, 10},
+			want: []float64{1, 1, 1},
+		},
+		{
+			name: "4x4 identity",
+			A:    [][]float64{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}},
+			b:    []float64{1, 2, 3, 4},
+			want: []float64{1, 2, 3, 4},
+		},
+		{
+			name: "3x3 requires pivoting",
+			A:    [][]float64{{0, 0, 1}, {0, 1, 0}, {1, 0, 0}},
+			b:    []float64{3, 2, 1},
+			want: []float64{1, 2, 3},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := solveLinearSystem(tt.A, tt.b)
+			if len(got) != len(tt.want) {
+				t.Fatalf("solveLinearSystem() returned %d elements, want %d", len(got), len(tt.want))
+			}
+			for i := range got {
+				if math.Abs(got[i]-tt.want[i]) > 1e-8 {
+					t.Errorf("solveLinearSystem() x[%d] = %f, want %f", i, got[i], tt.want[i])
+				}
+			}
+			// Verify Ax = b
+			for i := range tt.A {
+				sum := 0.0
+				for j := range tt.A[i] {
+					sum += tt.A[i][j] * got[j]
+				}
+				if math.Abs(sum-tt.b[i]) > 1e-8 {
+					t.Errorf("verification failed: (Ax)[%d] = %f, want %f", i, sum, tt.b[i])
+				}
+			}
+		})
+	}
+}
+
+func TestInverseIterationWithStart(t *testing.T) {
+	tests := []struct {
+		name       string
+		A          [][]float64
+		sigma      float64
+		x0         []float64
+		wantLambda float64 // expected eigenvalue closest to sigma
+	}{
+		{
+			name:       "2x2 diagonal, target eigenvalue 3",
+			A:          [][]float64{{3, 0}, {0, 7}},
+			sigma:      3,
+			x0:         []float64{1, 1},
+			wantLambda: 3,
+		},
+		{
+			name:       "2x2 diagonal, target eigenvalue 7",
+			A:          [][]float64{{3, 0}, {0, 7}},
+			sigma:      7,
+			x0:         []float64{1, 1},
+			wantLambda: 7,
+		},
+		{
+			name:       "2x2 symmetric, target eigenvalue 3",
+			A:          [][]float64{{2, 1}, {1, 2}},
+			sigma:      3,
+			x0:         []float64{0.6, 0.8},
+			wantLambda: 3,
+		},
+		{
+			name:       "2x2 symmetric, target eigenvalue 1",
+			A:          [][]float64{{2, 1}, {1, 2}},
+			sigma:      1,
+			x0:         []float64{0.6, -0.8},
+			wantLambda: 1,
+		},
+		{
+			name:       "3x3 diagonal, target eigenvalue 5",
+			A:          [][]float64{{2, 0, 0}, {0, 5, 0}, {0, 0, 9}},
+			sigma:      5,
+			x0:         []float64{1, 1, 1},
+			wantLambda: 5,
+		},
+		{
+			name:       "3x3 diagonal, target eigenvalue 9",
+			A:          [][]float64{{2, 0, 0}, {0, 5, 0}, {0, 0, 9}},
+			sigma:      9,
+			x0:         []float64{1, 1, 1},
+			wantLambda: 9,
+		},
+		{
+			name:       "3x3 symmetric, target largest eigenvalue",
+			A:          [][]float64{{4, 1, 0}, {1, 3, 1}, {0, 1, 2}},
+			sigma:      5,
+			x0:         []float64{1, 1, 1},
+			wantLambda: 4.732050808568877, // eigenvalues: 1, 3, 2+sqrt(3)≈4.732
+		},
+		{
+			name:       "2x2 identity, eigenvalue 1",
+			A:          [][]float64{{1, 0}, {0, 1}},
+			sigma:      1,
+			x0:         []float64{0.6, 0.8},
+			wantLambda: 1,
+		},
+		{
+			name:       "3x3 with negative eigenvalue",
+			A:          [][]float64{{-2, 0, 0}, {0, 3, 0}, {0, 0, 1}},
+			sigma:      -2,
+			x0:         []float64{1, 0.5, 0.5},
+			wantLambda: -2,
+		},
+		{
+			name:       "2x2 non-symmetric",
+			A:          [][]float64{{4, 1}, {2, 3}},
+			sigma:      5,
+			x0:         []float64{1, 1},
+			wantLambda: 5, // eigenvalues: 5, 2
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := len(tt.A)
+			got := inverseIterationWithStart(tt.A, tt.sigma, n, tt.x0)
+
+			// Check unit length
+			norm := 0.0
+			for _, v := range got {
+				norm += v * v
+			}
+			norm = math.Sqrt(norm)
+			if math.Abs(norm-1.0) > 1e-8 {
+				t.Errorf("result not unit length: norm = %f", norm)
+			}
+
+			// Check Av = λv (the returned vector should be an eigenvector for wantLambda)
+			for i := 0; i < n; i++ {
+				av := 0.0
+				for j := 0; j < n; j++ {
+					av += tt.A[i][j] * got[j]
+				}
+				lv := tt.wantLambda * got[i]
+				if math.Abs(av-lv) > 1e-4 {
+					t.Errorf("Av != λv at row %d: Av=%f, λv=%f (λ=%f, v=%v)",
+						i, av, lv, tt.wantLambda, got)
+					return
+				}
+			}
+		})
 	}
 }
