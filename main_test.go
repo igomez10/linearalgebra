@@ -5357,6 +5357,93 @@ func TestSVD(t *testing.T) {
 	}
 }
 
+func TestSVDAdditionalCases(t *testing.T) {
+	type testcase struct {
+		name                string
+		matrix              *Matrix
+		checkReconstruction bool
+		checkVOrtho         bool
+		checkUOrtho         bool
+		maxMinSigma         *float64
+	}
+
+	maxMinSigmaRankDef := 1e-6
+	tests := []testcase{
+		{
+			name: "rectangular reconstruction and orthonormality",
+			matrix: &Matrix{
+				data: [][]float64{
+					{1, 2},
+					{3, 4},
+					{5, 6},
+				},
+			},
+			checkReconstruction: true,
+			checkVOrtho:         true,
+			checkUOrtho:         true,
+		},
+		{
+			name: "rank-deficient has near-zero singular value",
+			matrix: &Matrix{
+				data: [][]float64{
+					{1, 2},
+					{2, 4},
+					{3, 6},
+				},
+			},
+			checkReconstruction: true,
+			checkVOrtho:         true,
+			checkUOrtho:         false,
+			maxMinSigma:         &maxMinSigmaRankDef,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svd := SVD(tt.matrix)
+
+			if tt.checkReconstruction {
+				us := DotProduct(svd.U.data, svd.S.data)
+				reconstructed := DotProduct(us, TransposeMatrix(svd.V.data))
+				if !areMatricesEqual(reconstructed, tt.matrix.data) {
+					t.Errorf("SVD reconstruction failed: got %v, want %v", reconstructed, tt.matrix.data)
+				}
+			}
+
+			if tt.checkVOrtho {
+				vtv := DotProduct(TransposeMatrix(svd.V.data), svd.V.data)
+				identity := GenerateIdentityMatrix(len(svd.V.data))
+				if !areMatricesEqual(vtv, identity) {
+					t.Errorf("SVD V not orthonormal: V^T*V = %v, want %v", vtv, identity)
+				}
+			}
+
+			if tt.checkUOrtho {
+				utu := DotProduct(TransposeMatrix(svd.U.data), svd.U.data)
+				identityU := GenerateIdentityMatrix(len(utu))
+				if !areMatricesEqual(utu, identityU) {
+					t.Errorf("SVD U not orthonormal: U^T*U = %v, want %v", utu, identityU)
+				}
+			}
+
+			if tt.maxMinSigma != nil {
+				if len(svd.S.data) == 0 || len(svd.S.data[0]) == 0 {
+					t.Fatalf("SVD returned empty S matrix")
+				}
+				minSigma := math.Inf(1)
+				for i := range svd.S.data {
+					if svd.S.data[i][i] < minSigma {
+						minSigma = svd.S.data[i][i]
+					}
+				}
+				if minSigma > *tt.maxMinSigma {
+					t.Errorf("expected near-zero singular value for rank-deficient matrix, got %f", minSigma)
+				}
+			}
+		})
+	}
+}
+
 func TestMatrix_Copy(t *testing.T) {
 	tests := []struct {
 		name string // description of this test case
@@ -5834,6 +5921,254 @@ func TestPCAProperties(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestPCAAdditionalCases(t *testing.T) {
+	type testcase struct {
+		name   string
+		matrix Matrix
+		verify func(t *testing.T, m Matrix, pcs []PrincipalComponent)
+	}
+
+	tests := []testcase{
+		{
+			name: "aligned axis variance and direction",
+			matrix: Matrix{
+				data: [][]float64{
+					{1, 0},
+					{2, 0},
+					{3, 0},
+					{4, 0},
+				},
+			},
+			verify: func(t *testing.T, m Matrix, pcs []PrincipalComponent) {
+				if len(pcs) != 2 {
+					t.Fatalf("expected 2 components, got %d", len(pcs))
+				}
+
+				// First component should align with x-axis, second with y-axis (up to sign)
+				if math.Abs(pcs[0].Vector[0]) < 0.999 || math.Abs(pcs[0].Vector[1]) > 1e-6 {
+					t.Errorf("first component not aligned with x-axis: %v", pcs[0].Vector)
+				}
+				if math.Abs(pcs[1].Vector[1]) < 0.999 || math.Abs(pcs[1].Vector[0]) > 1e-6 {
+					t.Errorf("second component not aligned with y-axis: %v", pcs[1].Vector)
+				}
+
+				// Variance: sample variance of [1,2,3,4] is 5/3
+				expectedVar := 5.0 / 3.0
+				if math.Abs(pcs[0].Variance-expectedVar) > 1e-3 {
+					t.Errorf("unexpected variance for first component: got %f, want %f", pcs[0].Variance, expectedVar)
+				}
+				if math.Abs(pcs[1].Variance) > 1e-6 {
+					t.Errorf("expected near-zero variance for second component, got %f", pcs[1].Variance)
+				}
+			},
+		},
+		{
+			name: "variance sum matches covariance trace",
+			matrix: Matrix{
+				data: [][]float64{
+					{1, 2},
+					{3, 4},
+					{5, 6},
+				},
+			},
+			verify: func(t *testing.T, m Matrix, pcs []PrincipalComponent) {
+				if len(pcs) == 0 {
+					t.Fatalf("PCA returned no components")
+				}
+
+				// Build covariance matrix for trace check
+				centered := CenterMatrix(m)
+				nSamples := float64(len(centered.data))
+				covData := DotProduct(TransposeMatrix(centered.data), centered.data)
+				for i := range covData {
+					for j := range covData[i] {
+						covData[i][j] /= (nSamples - 1)
+					}
+				}
+
+				trace := 0.0
+				for i := range covData {
+					trace += covData[i][i]
+				}
+
+				sumVar := 0.0
+				for _, pc := range pcs {
+					sumVar += pc.Variance
+				}
+
+				if math.Abs(sumVar-trace) > 1e-3 {
+					t.Errorf("sum of variances does not match covariance trace: got %f, want %f", sumVar, trace)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pcs := PCA(tt.matrix)
+			tt.verify(t, tt.matrix, pcs)
+		})
+	}
+}
+
+func TestPrincipalComponentGetScore(t *testing.T) {
+	type testcase struct {
+		name      string
+		pc        PrincipalComponent
+		data      []float64
+		want      float64
+		wantPanic bool
+	}
+
+	tests := []testcase{
+		{
+			name: "simple dot product",
+			pc: PrincipalComponent{
+				Vector: []float64{1, 0},
+			},
+			data: []float64{3, 4},
+			want: 3,
+		},
+		{
+			name: "non-unit vector",
+			pc: PrincipalComponent{
+				Vector: []float64{0.5, 0.5},
+			},
+			data: []float64{2, 4},
+			want: 3,
+		},
+		{
+			name: "mixed signs",
+			pc: PrincipalComponent{
+				Vector: []float64{-1, 2},
+			},
+			data: []float64{3, 4},
+			want: 5,
+		},
+		{
+			name: "zero vector",
+			pc: PrincipalComponent{
+				Vector: []float64{0, 0},
+			},
+			data: []float64{5, -7},
+			want: 0,
+		},
+		{
+			name: "negative values",
+			pc: PrincipalComponent{
+				Vector: []float64{-2, -3},
+			},
+			data: []float64{4, -5},
+			want: 7,
+		},
+		{
+			name: "empty vector and data",
+			pc: PrincipalComponent{
+				Vector: []float64{},
+			},
+			data: []float64{},
+			want: 0,
+		},
+		{
+			name: "mismatched length panics",
+			pc: PrincipalComponent{
+				Vector: []float64{1, 2, 3},
+			},
+			data:      []float64{1, 2},
+			wantPanic: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Errorf("expected panic, got none")
+					}
+				}()
+			}
+
+			got := tt.pc.GetScore(tt.data)
+			if tt.wantPanic {
+				return
+			}
+			if math.Abs(got-tt.want) > 1e-6 {
+				t.Errorf("GetScore() = %f, want %f", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPrincipalComponentGetExplainedVarianceRatio(t *testing.T) {
+	type testcase struct {
+		name          string
+		pc            PrincipalComponent
+		totalVariance float64
+		want          float64
+	}
+
+	tests := []testcase{
+		{
+			name: "zero total variance",
+			pc: PrincipalComponent{
+				Variance: 5,
+			},
+			totalVariance: 0,
+			want:          0,
+		},
+		{
+			name: "simple ratio",
+			pc: PrincipalComponent{
+				Variance: 2,
+			},
+			totalVariance: 10,
+			want:          0.2,
+		},
+		{
+			name: "zero variance",
+			pc: PrincipalComponent{
+				Variance: 0,
+			},
+			totalVariance: 7,
+			want:          0,
+		},
+		{
+			name: "negative variance",
+			pc: PrincipalComponent{
+				Variance: -3,
+			},
+			totalVariance: 12,
+			want:          -0.25,
+		},
+		{
+			name: "negative total variance",
+			pc: PrincipalComponent{
+				Variance: 2,
+			},
+			totalVariance: -4,
+			want:          -0.5,
+		},
+		{
+			name: "fractional variance",
+			pc: PrincipalComponent{
+				Variance: 0.75,
+			},
+			totalVariance: 3,
+			want:          0.25,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.pc.GetExplainedVarianceRatio(tt.totalVariance)
+			if math.Abs(got-tt.want) > 1e-6 {
+				t.Errorf("GetExplainedVarianceRatio() = %f, want %f", got, tt.want)
+			}
+		})
+	}
 }
 
 func TestSolveLinearSystem(t *testing.T) {

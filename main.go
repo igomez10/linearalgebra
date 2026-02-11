@@ -1950,6 +1950,31 @@ type PrincipalComponent struct {
 	Variance float64
 }
 
+// GetScore projects a data point onto the principal component vector to
+// get the score of that data point on this principal component
+func (pc PrincipalComponent) GetScore(data []float64) float64 {
+	if len(data) != len(pc.Vector) {
+		panic("data length must match principal component vector length")
+	}
+
+	var score float64
+	for i := range data {
+		score += data[i] * pc.Vector[i]
+	}
+
+	return score
+}
+
+// GetExplainedVarianceRatio returns the ratio of the variance explained by this principal component
+// to the total variance in the data. This is calculated as the variance of this component
+// divided by the total variance (sum of variances of all components).
+func (pc PrincipalComponent) GetExplainedVarianceRatio(totalVariance float64) float64 {
+	if totalVariance == 0 {
+		return 0
+	}
+	return pc.Variance / totalVariance
+}
+
 // PCA finds the the top principal components
 func PCA(m Matrix) []PrincipalComponent {
 	// center the data to have mean 0
