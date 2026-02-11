@@ -1863,10 +1863,14 @@ type SVDResult struct {
 // It returns matrices U, S, and V such that A = U * S * V^T
 func SVD(m *Matrix) SVDResult {
 	// compute AtA to find eigenvalues, we need a square matrix
-	AtA := m.DotProduct(m)
-	eigenValues := GetEigenvalues(AtA.data)
+	At := TransposeMatrix(m.data)
+	AtA := DotProduct(At, m.data)
+	eigenValues := GetEigenvalues(AtA)
 	singularValues := make([]float64, len(eigenValues))
 	for i, val := range eigenValues {
+		// the singular values are the square root of the eigenvalues of AtA
+		// we only take the real part of the eigenvalues, if the real part is
+		//  negative we set the singular value to 0
 		if real(val) < 0 {
 			singularValues[i] = 0
 		} else {
@@ -1875,6 +1879,7 @@ func SVD(m *Matrix) SVDResult {
 	}
 
 	// create diagonal matrix S with singular values
+	// this is also called D or Sigma in some notations
 	diagonalScaling := make([][]float64, len(singularValues))
 	// fill with 0s
 	for i := range diagonalScaling {
@@ -1885,7 +1890,7 @@ func SVD(m *Matrix) SVDResult {
 	}
 
 	// compute V by finding the eigenvectors of AtA
-	vectors := GetEigenvectors(AtA.data)
+	vectors := GetEigenvectors(AtA)
 	V := make([][]float64, len(vectors))
 	for i := range vectors {
 		V[i] = make([]float64, len(vectors))
@@ -1952,23 +1957,29 @@ func PCA(m Matrix) []PrincipalComponent {
 	centeredMatrix := m.Copy()
 	// substract the mean of each column from the corresponding column entries
 	centeredMatrix.Center()
-	covarianceMatrix := centeredMatrix.GetCovarianceMatrix()
 
-	// get the eigenvalues and eigenvectors of the covariance matrix
-	eigenValues := GetEigenvalues(covarianceMatrix.data)
-	eigenVectors := GetEigenvectors(covarianceMatrix.data)
+	svd := SVD(centeredMatrix)
 
-	// sort the eigenvalues and eigenvectors in descending order of eigenvalues
+	// sort the variances and eigenvectors in descending order of variance
 	type EigenPair struct {
 		Value  float64
-		Vector []complex128
+		Vector []float64
 	}
-	eigenPairs := make([]EigenPair, len(eigenValues))
-	for i := range eigenValues {
-		eigenPairs[i] = EigenPair{
-			Value:  real(eigenValues[i]),
-			Vector: eigenVectors[i],
+	eigenPairs := make([]EigenPair, 0, len(svd.S.data))
+	nSamples := float64(len(centeredMatrix.data))
+
+	// here we convert the singular values to variances by squaring them and dividing by n-1
+	// we do this because the singular values are the square roots of the eigenvalues of
+	//  the covariance matrix,
+	for i := range svd.S.data {
+		sigma := svd.S.data[i][i]
+		variance := (sigma * sigma) / (nSamples - 1)
+
+		ep := EigenPair{
+			Value:  variance,
+			Vector: svd.V.data[i],
 		}
+		eigenPairs = append(eigenPairs, ep)
 	}
 
 	sort.Slice(eigenPairs, func(i, j int) bool {
@@ -1978,7 +1989,7 @@ func PCA(m Matrix) []PrincipalComponent {
 	principalComponents := make([]PrincipalComponent, len(eigenPairs))
 	for i := range eigenPairs {
 		principalComponents[i] = PrincipalComponent{
-			Vector:   complexToRealVector(eigenPairs[i].Vector),
+			Vector:   eigenPairs[i].Vector,
 			Variance: eigenPairs[i].Value,
 		}
 	}
