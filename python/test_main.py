@@ -16,7 +16,7 @@ class TestMatrixInverse(unittest.TestCase):
 class TestPCACustom(unittest.TestCase):
     file = "./data/pca_dataset.csv"
     # read data and do pca
-    df = pd.read_csv(file, skiprows=1, index_col=0)
+    df = pd.read_csv(file)
     
     # do pca
     from sklearn.decomposition import PCA
