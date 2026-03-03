@@ -1806,7 +1806,7 @@ func Test_multiplyMatrices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := DotProduct(tt.args.matrixA, tt.args.matrixB); !reflect.DeepEqual(got, tt.want) {
+			if got := MultiplyMatrices(tt.args.matrixA, tt.args.matrixB); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("multiplyMatrices() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1989,7 +1989,7 @@ func TestGetEliminationMatrix(t *testing.T) {
 
 			// TODO confirm inverse works
 
-			multiplied := DotProduct(got, originalMatrix)
+			multiplied := MultiplyMatrices(got, originalMatrix)
 			if !IsRowEchelonForm(multiplied) {
 				t.Errorf("expected to be reduced row echelon form")
 			}
@@ -5403,15 +5403,15 @@ func TestSVDAdditionalCases(t *testing.T) {
 			svd := SVD(tt.matrix)
 
 			if tt.checkReconstruction {
-				us := DotProduct(svd.U.data, svd.S.data)
-				reconstructed := DotProduct(us, TransposeMatrix(svd.V.data))
+				us := MultiplyMatrices(svd.U.data, svd.S.data)
+				reconstructed := MultiplyMatrices(us, TransposeMatrix(svd.V.data))
 				if !areMatricesEqual(reconstructed, tt.matrix.data) {
 					t.Errorf("SVD reconstruction failed: got %v, want %v", reconstructed, tt.matrix.data)
 				}
 			}
 
 			if tt.checkVOrtho {
-				vtv := DotProduct(TransposeMatrix(svd.V.data), svd.V.data)
+				vtv := MultiplyMatrices(TransposeMatrix(svd.V.data), svd.V.data)
 				identity := GenerateIdentityMatrix(len(svd.V.data))
 				if !areMatricesEqual(vtv, identity) {
 					t.Errorf("SVD V not orthonormal: V^T*V = %v, want %v", vtv, identity)
@@ -5419,7 +5419,7 @@ func TestSVDAdditionalCases(t *testing.T) {
 			}
 
 			if tt.checkUOrtho {
-				utu := DotProduct(TransposeMatrix(svd.U.data), svd.U.data)
+				utu := MultiplyMatrices(TransposeMatrix(svd.U.data), svd.U.data)
 				identityU := GenerateIdentityMatrix(len(utu))
 				if !areMatricesEqual(utu, identityU) {
 					t.Errorf("SVD U not orthonormal: U^T*U = %v, want %v", utu, identityU)
@@ -5838,7 +5838,7 @@ func TestPCAProperties(t *testing.T) {
 	// Build covariance matrix for Av = λv check
 	centered := CenterMatrix(m)
 	nSamples := float64(len(centered.data))
-	covData := DotProduct(TransposeMatrix(centered.data), centered.data)
+	covData := MultiplyMatrices(TransposeMatrix(centered.data), centered.data)
 	for i := range covData {
 		for j := range covData[i] {
 			covData[i][j] /= (nSamples - 1)
@@ -5981,7 +5981,7 @@ func TestPCAAdditionalCases(t *testing.T) {
 				// Build covariance matrix for trace check
 				centered := CenterMatrix(m)
 				nSamples := float64(len(centered.data))
-				covData := DotProduct(TransposeMatrix(centered.data), centered.data)
+				covData := MultiplyMatrices(TransposeMatrix(centered.data), centered.data)
 				for i := range covData {
 					for j := range covData[i] {
 						covData[i][j] /= (nSamples - 1)

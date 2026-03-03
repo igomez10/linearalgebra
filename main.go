@@ -150,7 +150,7 @@ func GetEliminationMatrix(matrix [][]float64) [][]float64 {
 
 	eliminationMatrix := changeMatrices[0]
 	for i := 1; i < len(changeMatrices); i++ {
-		eliminationMatrix = DotProduct(changeMatrices[i], eliminationMatrix)
+		eliminationMatrix = MultiplyMatrices(changeMatrices[i], eliminationMatrix)
 	}
 
 	return eliminationMatrix
@@ -304,12 +304,12 @@ func DotProductVectors(vectorA, vectorB []float64) float64 {
 	for i := range vectorB {
 		columnVectorB = append(columnVectorB, []float64{vectorB[i]})
 	}
-	return DotProduct(rowVectorA, columnVectorB)[0][0]
+	return MultiplyMatrices(rowVectorA, columnVectorB)[0][0]
 }
 
-// DotProduct multiply matrices will use dot product to multiply two matrices
-// For DotProduct with vectors use DotProductVectors instead
-func DotProduct(matrixA, matrixB [][]float64) [][]float64 {
+// MultiplyMatrices multiply matrices will use dot product to multiply two matrices
+// For MultiplyMatrices with vectors use DotProductVectors instead
+func MultiplyMatrices(matrixA, matrixB [][]float64) [][]float64 {
 	if !CanMultiplyMatrices(matrixA, matrixB) {
 		panic("invalid multiplication")
 	}
@@ -1061,7 +1061,7 @@ func IsVectorInTheNullSpaceOfMatrix(vector []float64, matrix [][]float64) bool {
 	}
 
 	// check if we should transpose vector to make it column or row vector
-	resultVector := DotProduct(matrix, columnVector)
+	resultVector := MultiplyMatrices(matrix, columnVector)
 	if len(resultVector[0]) != 1 {
 		panic("result vector should be a row vector")
 	}
@@ -1267,7 +1267,7 @@ func GetEigenvalues(matrix [][]float64) []complex128 {
 			A[i][i] -= shift
 		}
 		Q, R := qrDecomposition(A)
-		A = DotProduct(R, Q)
+		A = MultiplyMatrices(R, Q)
 		for i := 0; i < n; i++ {
 			A[i][i] += shift
 		}
@@ -1753,7 +1753,7 @@ func (m Matrix) GetCovarianceMatrix() Matrix {
 
 	centered := CenterMatrix(m)
 	n := float64(len(centered.data))
-	covData := DotProduct(TransposeMatrix(centered.data), centered.data)
+	covData := MultiplyMatrices(TransposeMatrix(centered.data), centered.data)
 	for i := range covData {
 		for j := range covData[i] {
 			covData[i][j] /= (n - 1)
@@ -1800,8 +1800,8 @@ func (m *Matrix) Copy() *Matrix {
 	return newmatrix
 }
 
-func (m *Matrix) DotProduct(matrixB *Matrix) Matrix {
-	res := DotProduct(m.data, matrixB.data)
+func (m *Matrix) MultiplyMatrix(matrixB *Matrix) Matrix {
+	res := MultiplyMatrices(m.data, matrixB.data)
 	return Matrix{data: res}
 }
 
@@ -1846,7 +1846,7 @@ func validateEigenDecomposition(matrix Matrix, eigenvalue float64, eigenvector [
 	realEigenMatrix := Matrix{data: [][]float64{realEigen}}
 	realEigenMatrix.Transpose()
 	// A * v
-	Av := DotProduct(matrix.data, realEigenMatrix.data)
+	Av := MultiplyMatrices(matrix.data, realEigenMatrix.data)
 	// lambda * v
 	lambdaV := MultiplyVectorByScalar(realEigenMatrix.GetColumn(0), eigenvalue)
 	lambdaVRes := TransposeMatrix([][]float64{lambdaV})
@@ -1864,8 +1864,9 @@ type SVDResult struct {
 func SVD(m *Matrix) SVDResult {
 	// compute AtA to find eigenvalues, we need a square matrix
 	At := TransposeMatrix(m.data)
-	AtA := DotProduct(At, m.data)
+	AtA := MultiplyMatrices(At, m.data)
 	eigenValues := GetEigenvalues(AtA)
+	// build singular values from eigenvalues of AtA
 	singularValues := make([]float64, len(eigenValues))
 	for i, val := range eigenValues {
 		// the singular values are the square root of the eigenvalues of AtA
@@ -1880,13 +1881,13 @@ func SVD(m *Matrix) SVDResult {
 
 	// create diagonal matrix S with singular values
 	// this is also called D or Sigma in some notations
-	diagonalScaling := make([][]float64, len(singularValues))
+	Dmatrix := make([][]float64, len(singularValues))
 	// fill with 0s
-	for i := range diagonalScaling {
-		diagonalScaling[i] = make([]float64, len(singularValues))
+	for i := range Dmatrix {
+		Dmatrix[i] = make([]float64, len(singularValues))
 	}
 	for i := range singularValues {
-		diagonalScaling[i][i] = singularValues[i]
+		Dmatrix[i][i] = singularValues[i]
 	}
 
 	// compute V by finding the eigenvectors of AtA
@@ -1900,24 +1901,24 @@ func SVD(m *Matrix) SVDResult {
 	}
 
 	// compute U as A * V * S^-1
-	SInv := make([][]float64, len(diagonalScaling))
-	for i := range diagonalScaling {
-		SInv[i] = make([]float64, len(diagonalScaling))
-		for j := range diagonalScaling {
-			if diagonalScaling[i][j] != 0 {
-				SInv[i][j] = 1 / diagonalScaling[i][j]
+	SInv := make([][]float64, len(Dmatrix))
+	for i := range Dmatrix {
+		SInv[i] = make([]float64, len(Dmatrix))
+		for j := range Dmatrix {
+			if Dmatrix[i][j] != 0 {
+				SInv[i][j] = 1 / Dmatrix[i][j]
 			} else {
 				SInv[i][j] = 0
 			}
 		}
 	}
 
-	AV := DotProduct(m.data, V)
-	U := DotProduct(AV, SInv)
+	AV := MultiplyMatrices(m.data, V)
+	U := MultiplyMatrices(AV, SInv)
 
 	svd := SVDResult{
 		U: Matrix{data: U},
-		S: Matrix{data: diagonalScaling},
+		S: Matrix{data: Dmatrix},
 		V: Matrix{data: V},
 	}
 
@@ -1965,6 +1966,10 @@ func (pc PrincipalComponent) GetScore(data []float64) float64 {
 	return score
 }
 
+func (pc PrincipalComponent) GetDirection() []float64 {
+	return pc.Vector
+}
+
 // GetExplainedVarianceRatio returns the ratio of the variance explained by this principal component
 // to the total variance in the data. This is calculated as the variance of this component
 // divided by the total variance (sum of variances of all components).
@@ -1977,9 +1982,9 @@ func (pc PrincipalComponent) GetExplainedVarianceRatio(totalVariance float64) fl
 
 // PCA finds the the top principal components
 func PCA(m Matrix) []PrincipalComponent {
+	centeredMatrix := m.Copy()
 	// center the data to have mean 0
 	// this is done by subtracting the mean of each column from the corresponding column entries
-	centeredMatrix := m.Copy()
 	// substract the mean of each column from the corresponding column entries
 	centeredMatrix.Center()
 
