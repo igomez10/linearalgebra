@@ -5197,7 +5197,7 @@ func TestConfirmEigenvaluesAndEigenvectors(t *testing.T) {
 		{
 			name: "2x2 matrix with distinct real eigenvalues",
 			matrix: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{4, 2},
 					{1, 3},
 				},
@@ -5211,7 +5211,7 @@ func TestConfirmEigenvaluesAndEigenvectors(t *testing.T) {
 		{
 			name: "2x2 matrix with distinct real eigenvalues",
 			matrix: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{4, 2},
 					{1, 3},
 				},
@@ -5297,20 +5297,20 @@ func TestSVD(t *testing.T) {
 		{
 			name: "2x2 matrix",
 			matrix: &Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{3, 1},
 					{1, 3},
 				},
 			},
 			wantU: &Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{0.7071, 0.7071},
 					{0.7071, -0.7071},
 				},
 			},
-			wantS: &Matrix{data: [][]float64{{4.0, 0}, {0, 2.0}}},
+			wantS: &Matrix{Data: [][]float64{{4.0, 0}, {0, 2.0}}},
 			wantV: &Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{0.7071, 0.7071},
 					{0.7071, -0.7071},
 				},
@@ -5322,32 +5322,32 @@ func TestSVD(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			svd := SVD(tt.matrix)
 			// check lengths
-			if len(svd.U.data) != len(tt.wantU.data) || len(svd.S.data) != len(tt.wantS.data) || len(svd.V.data) != len(tt.wantV.data) {
+			if len(svd.U.Data) != len(tt.wantU.Data) || len(svd.S.Data) != len(tt.wantS.Data) || len(svd.V.Data) != len(tt.wantV.Data) {
 				t.Errorf("SVD() dimensions mismatch: got U %v, S %v, V %v; want U %v, S %v, V %v", svd.U, svd.S, svd.V, tt.wantU, tt.wantS, tt.wantV)
 				return
 			}
 			// Compare U
-			for i := range svd.U.data {
-				for j := range svd.U.data[i] {
-					if math.Abs(svd.U.data[i][j]-tt.wantU.data[i][j]) > 1e-3 {
+			for i := range svd.U.Data {
+				for j := range svd.U.Data[i] {
+					if math.Abs(svd.U.Data[i][j]-tt.wantU.Data[i][j]) > 1e-3 {
 						t.Errorf("SVD() U = %v, want %v", svd.U, tt.wantU)
 						return
 					}
 				}
 			}
 			// Compare S
-			for i := range svd.S.data {
-				for j := range svd.S.data[i] {
-					if math.Abs(svd.S.data[i][j]-tt.wantS.data[i][j]) > 1e-3 {
+			for i := range svd.S.Data {
+				for j := range svd.S.Data[i] {
+					if math.Abs(svd.S.Data[i][j]-tt.wantS.Data[i][j]) > 1e-3 {
 						t.Errorf("SVD() S = %v, want %v", svd.S, tt.wantS)
 						return
 					}
 				}
 			}
 			// Compare V
-			for i := range svd.V.data {
-				for j := range svd.V.data[i] {
-					if math.Abs(svd.V.data[i][j]-tt.wantV.data[i][j]) > 1e-3 {
+			for i := range svd.V.Data {
+				for j := range svd.V.Data[i] {
+					if math.Abs(svd.V.Data[i][j]-tt.wantV.Data[i][j]) > 1e-3 {
 						t.Errorf("SVD() V = %v, want %v", svd.V, tt.wantV)
 						return
 					}
@@ -5372,7 +5372,7 @@ func TestSVDAdditionalCases(t *testing.T) {
 		{
 			name: "rectangular reconstruction and orthonormality",
 			matrix: &Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2},
 					{3, 4},
 					{5, 6},
@@ -5385,7 +5385,7 @@ func TestSVDAdditionalCases(t *testing.T) {
 		{
 			name: "rank-deficient has near-zero singular value",
 			matrix: &Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2},
 					{2, 4},
 					{3, 6},
@@ -5403,23 +5403,23 @@ func TestSVDAdditionalCases(t *testing.T) {
 			svd := SVD(tt.matrix)
 
 			if tt.checkReconstruction {
-				us := MultiplyMatrices(svd.U.data, svd.S.data)
-				reconstructed := MultiplyMatrices(us, TransposeMatrix(svd.V.data))
-				if !areMatricesEqual(reconstructed, tt.matrix.data) {
-					t.Errorf("SVD reconstruction failed: got %v, want %v", reconstructed, tt.matrix.data)
+				us := MultiplyMatrices(svd.U.Data, svd.S.Data)
+				reconstructed := MultiplyMatrices(us, TransposeMatrix(svd.V.Data))
+				if !areMatricesEqual(reconstructed, tt.matrix.Data) {
+					t.Errorf("SVD reconstruction failed: got %v, want %v", reconstructed, tt.matrix.Data)
 				}
 			}
 
 			if tt.checkVOrtho {
-				vtv := MultiplyMatrices(TransposeMatrix(svd.V.data), svd.V.data)
-				identity := GenerateIdentityMatrix(len(svd.V.data))
+				vtv := MultiplyMatrices(TransposeMatrix(svd.V.Data), svd.V.Data)
+				identity := GenerateIdentityMatrix(len(svd.V.Data))
 				if !areMatricesEqual(vtv, identity) {
 					t.Errorf("SVD V not orthonormal: V^T*V = %v, want %v", vtv, identity)
 				}
 			}
 
 			if tt.checkUOrtho {
-				utu := MultiplyMatrices(TransposeMatrix(svd.U.data), svd.U.data)
+				utu := MultiplyMatrices(TransposeMatrix(svd.U.Data), svd.U.Data)
 				identityU := GenerateIdentityMatrix(len(utu))
 				if !areMatricesEqual(utu, identityU) {
 					t.Errorf("SVD U not orthonormal: U^T*U = %v, want %v", utu, identityU)
@@ -5427,13 +5427,13 @@ func TestSVDAdditionalCases(t *testing.T) {
 			}
 
 			if tt.maxMinSigma != nil {
-				if len(svd.S.data) == 0 || len(svd.S.data[0]) == 0 {
+				if len(svd.S.Data) == 0 || len(svd.S.Data[0]) == 0 {
 					t.Fatalf("SVD returned empty S matrix")
 				}
 				minSigma := math.Inf(1)
-				for i := range svd.S.data {
-					if svd.S.data[i][i] < minSigma {
-						minSigma = svd.S.data[i][i]
+				for i := range svd.S.Data {
+					if svd.S.Data[i][i] < minSigma {
+						minSigma = svd.S.Data[i][i]
 					}
 				}
 				if minSigma > *tt.maxMinSigma {
@@ -5451,22 +5451,22 @@ func TestMatrix_Copy(t *testing.T) {
 	}{
 		{
 			name: "copy of empty matrix",
-			want: &Matrix{data: [][]float64{}},
+			want: &Matrix{Data: [][]float64{}},
 		},
 		{
 			name: "copy of 1x1 matrix",
-			want: &Matrix{data: [][]float64{{42}}},
+			want: &Matrix{Data: [][]float64{{42}}},
 		},
 		{
 			name: "copy of 2x2 matrix",
-			want: &Matrix{data: [][]float64{
+			want: &Matrix{Data: [][]float64{
 				{1, 2},
 				{3, 4},
 			}},
 		},
 		{
 			name: "copy of 3x3 matrix",
-			want: &Matrix{data: [][]float64{
+			want: &Matrix{Data: [][]float64{
 				{1, 2, 3},
 				{4, 5, 6},
 				{7, 8, 9},
@@ -5474,7 +5474,7 @@ func TestMatrix_Copy(t *testing.T) {
 		},
 		{
 			name: "copy of non-square matrix",
-			want: &Matrix{data: [][]float64{
+			want: &Matrix{Data: [][]float64{
 				{1, 2, 3},
 				{4, 5, 6},
 			}},
@@ -5483,14 +5483,14 @@ func TestMatrix_Copy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			matrix := tt.want.Copy()
-			if !areMatricesEqual(matrix.data, tt.want.data) {
-				t.Errorf("Matrix.Copy() = %v, want %v", matrix.data, tt.want.data)
+			if !areMatricesEqual(matrix.Data, tt.want.Data) {
+				t.Errorf("Matrix.Copy() = %v, want %v", matrix.Data, tt.want.Data)
 			}
 			// Modify the original matrix and check that the copy does not change
-			if len(tt.want.data) > 0 && len(tt.want.data[0]) > 0 {
-				tt.want.data[0][0] = 999
-				if areMatricesEqual(matrix.data, tt.want.data) {
-					t.Errorf("Matrix.Copy() did not create a deep copy: got %v, want %v", matrix.data, tt.want.data)
+			if len(tt.want.Data) > 0 && len(tt.want.Data[0]) > 0 {
+				tt.want.Data[0][0] = 999
+				if areMatricesEqual(matrix.Data, tt.want.Data) {
+					t.Errorf("Matrix.Copy() did not create a deep copy: got %v, want %v", matrix.Data, tt.want.Data)
 				}
 			}
 		})
@@ -5512,7 +5512,7 @@ func TestMatrix_SetIndex(t *testing.T) {
 			i:      0,
 			j:      0,
 			value:  99,
-			matrix: Matrix{data: [][]float64{{0}}},
+			matrix: Matrix{Data: [][]float64{{0}}},
 			validation: func(i, j int, value float64) bool {
 				return i == 0 && j == 0 && value == 99
 			},
@@ -5522,7 +5522,7 @@ func TestMatrix_SetIndex(t *testing.T) {
 			i:     1,
 			j:     1,
 			value: -5,
-			matrix: Matrix{data: [][]float64{
+			matrix: Matrix{Data: [][]float64{
 				{0, 0},
 				{0, 0},
 			}},
@@ -5535,7 +5535,7 @@ func TestMatrix_SetIndex(t *testing.T) {
 			i:     0,
 			j:     2,
 			value: 3.14,
-			matrix: Matrix{data: [][]float64{
+			matrix: Matrix{Data: [][]float64{
 				{0, 0, 0},
 				{0, 0, 0},
 			}},
@@ -5548,7 +5548,7 @@ func TestMatrix_SetIndex(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.matrix.SetIndex(tt.i, tt.j, tt.value)
 			if !tt.validation(tt.i, tt.j, tt.value) {
-				t.Errorf("Matrix.SetIndex() did not set the value correctly: got %v, want %v", tt.matrix.data, tt.value)
+				t.Errorf("Matrix.SetIndex() did not set the value correctly: got %v, want %v", tt.matrix.Data, tt.value)
 			}
 		})
 	}
@@ -5564,7 +5564,7 @@ func TestCenterMatrix(t *testing.T) {
 		{
 			name: "center 3x3 matrix",
 			m: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2, 3},
 					{4, 5, 6},
 					{7, 8, 9},
@@ -5572,7 +5572,7 @@ func TestCenterMatrix(t *testing.T) {
 				},
 			},
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{-4.5, -4.5, -4.5},
 					{-1.5, -1.5, -1.5},
 					{1.5, 1.5, 1.5},
@@ -5583,13 +5583,13 @@ func TestCenterMatrix(t *testing.T) {
 		{
 			name: "center 2x2 matrix",
 			m: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2},
 					{3, 4},
 				},
 			},
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{-1, -1},
 					{1, 1},
 				},
@@ -5598,12 +5598,12 @@ func TestCenterMatrix(t *testing.T) {
 		{
 			name: "center 1x1 matrix",
 			m: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{5},
 				},
 			},
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{0},
 				},
 			},
@@ -5612,8 +5612,8 @@ func TestCenterMatrix(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := CenterMatrix(tt.m)
-			if !areMatricesEqual(got.data, tt.want.data) {
-				t.Errorf("CenterMatrix() = %v, want %v", got.data, tt.want.data)
+			if !areMatricesEqual(got.Data, tt.want.Data) {
+				t.Errorf("CenterMatrix() = %v, want %v", got.Data, tt.want.Data)
 			}
 		})
 	}
@@ -5629,7 +5629,7 @@ func TestMatrix_GetCovarianceMatrix(t *testing.T) {
 		{
 			name: "covariance of centered 3x3 matrix",
 			m: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{-4.5, -4.5, -4.5},
 					{-1.5, -1.5, -1.5},
 					{1.5, 1.5, 1.5},
@@ -5637,7 +5637,7 @@ func TestMatrix_GetCovarianceMatrix(t *testing.T) {
 				},
 			},
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{15, 15, 15},
 					{15, 15, 15},
 					{15, 15, 15},
@@ -5647,13 +5647,13 @@ func TestMatrix_GetCovarianceMatrix(t *testing.T) {
 		{
 			name: "covariance of centered 2x2 matrix",
 			m: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{-1, -1},
 					{1, 1},
 				},
 			},
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{2, 2},
 					{2, 2},
 				},
@@ -5662,12 +5662,12 @@ func TestMatrix_GetCovarianceMatrix(t *testing.T) {
 		{
 			name: "covariance of centered 1x1 matrix",
 			m: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{0},
 				},
 			},
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{0},
 				},
 			},
@@ -5677,14 +5677,14 @@ func TestMatrix_GetCovarianceMatrix(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m := CenterMatrix(tt.m)
 			got := m.GetCovarianceMatrix()
-			if !areMatricesEqual(got.data, tt.want.data) {
-				t.Errorf("Matrix.GetCovarianceMatrix() = %v, want %v", got.data, tt.want.data)
+			if !areMatricesEqual(got.Data, tt.want.Data) {
+				t.Errorf("Matrix.GetCovarianceMatrix() = %v, want %v", got.Data, tt.want.Data)
 			}
 		})
 	}
 }
 
-func TestReadCSVToMatrix(t *testing.T) {
+func TestNewMatrixFromReader(t *testing.T) {
 	tests := []struct {
 		name       string
 		reader     io.Reader
@@ -5697,7 +5697,7 @@ func TestReadCSVToMatrix(t *testing.T) {
 				"1,2\n3,4\n",
 			),
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2},
 					{3, 4},
 				},
@@ -5709,7 +5709,7 @@ func TestReadCSVToMatrix(t *testing.T) {
 				"1,2,3\n4,5,6\n7,8,9\n",
 			),
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2, 3},
 					{4, 5, 6},
 					{7, 8, 9},
@@ -5722,7 +5722,7 @@ func TestReadCSVToMatrix(t *testing.T) {
 				"1,2\n\n3,4\n",
 			),
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2},
 					{3, 4},
 				},
@@ -5735,7 +5735,7 @@ func TestReadCSVToMatrix(t *testing.T) {
 			),
 			skipHeader: true,
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2},
 					{3, 4},
 				},
@@ -5744,9 +5744,9 @@ func TestReadCSVToMatrix(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ReadCSVToMatrix(tt.reader, tt.skipHeader)
-			if !areMatricesEqual(got.data, tt.want.data) {
-				t.Errorf("ReadCSVToMatrix() = %v, want %v", got.data, tt.want.data)
+			got := NewMatrixFromReader(tt.reader, tt.skipHeader)
+			if !areMatricesEqual(got.Data, tt.want.Data) {
+				t.Errorf("ReadCSVToMatrix() = %v, want %v", got.Data, tt.want.Data)
 			}
 		})
 	}
@@ -5775,7 +5775,7 @@ func TestReadCSVToMatrixFromFile(t *testing.T) {
 			name:     "simple 2x2 CSV file",
 			filePath: "/tmp/test_matrix.csv",
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2},
 					{3, 4},
 				},
@@ -5786,7 +5786,7 @@ func TestReadCSVToMatrixFromFile(t *testing.T) {
 			filePath:   "/tmp/test_matrix_with_header.csv",
 			skipHeader: true,
 			want: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2},
 					{3, 4},
 				},
@@ -5796,8 +5796,8 @@ func TestReadCSVToMatrixFromFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ReadCSVToMatrixFromFile(tt.filePath, tt.skipHeader)
-			if !areMatricesEqual(got.data, tt.want.data) {
-				t.Errorf("ReadCSVToMatrixFromFile() = %v, want %v", got.data, tt.want.data)
+			if !areMatricesEqual(got.Data, tt.want.Data) {
+				t.Errorf("ReadCSVToMatrixFromFile() = %v, want %v", got.Data, tt.want.Data)
 			}
 		})
 	}
@@ -5807,7 +5807,7 @@ func TestPCA(t *testing.T) {
 	// read file
 	testfile := "data/pca_dataset.csv"
 	m := ReadCSVToMatrixFromFile(testfile, true)
-	if len(m.data) == 0 {
+	if len(m.Data) == 0 {
 		t.Fatalf("unexpected empty size")
 	}
 
@@ -5825,7 +5825,7 @@ func TestPCA(t *testing.T) {
 func TestPCAProperties(t *testing.T) {
 	testfile := "data/pca_dataset.csv"
 	m := ReadCSVToMatrixFromFile(testfile, true)
-	if len(m.data) == 0 {
+	if len(m.Data) == 0 {
 		t.Fatalf("unexpected empty matrix")
 	}
 
@@ -5837,8 +5837,8 @@ func TestPCAProperties(t *testing.T) {
 
 	// Build covariance matrix for Av = λv check
 	centered := CenterMatrix(m)
-	nSamples := float64(len(centered.data))
-	covData := MultiplyMatrices(TransposeMatrix(centered.data), centered.data)
+	nSamples := float64(len(centered.Data))
+	covData := MultiplyMatrices(TransposeMatrix(centered.Data), centered.Data)
 	for i := range covData {
 		for j := range covData[i] {
 			covData[i][j] /= (nSamples - 1)
@@ -5934,7 +5934,7 @@ func TestPCAAdditionalCases(t *testing.T) {
 		{
 			name: "aligned axis variance and direction",
 			matrix: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 0},
 					{2, 0},
 					{3, 0},
@@ -5967,7 +5967,7 @@ func TestPCAAdditionalCases(t *testing.T) {
 		{
 			name: "variance sum matches covariance trace",
 			matrix: Matrix{
-				data: [][]float64{
+				Data: [][]float64{
 					{1, 2},
 					{3, 4},
 					{5, 6},
@@ -5980,8 +5980,8 @@ func TestPCAAdditionalCases(t *testing.T) {
 
 				// Build covariance matrix for trace check
 				centered := CenterMatrix(m)
-				nSamples := float64(len(centered.data))
-				covData := MultiplyMatrices(TransposeMatrix(centered.data), centered.data)
+				nSamples := float64(len(centered.Data))
+				covData := MultiplyMatrices(TransposeMatrix(centered.Data), centered.Data)
 				for i := range covData {
 					for j := range covData[i] {
 						covData[i][j] /= (nSamples - 1)

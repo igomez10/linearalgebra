@@ -1689,15 +1689,19 @@ func complexToRealVector(vector []complex128) []float64 {
 }
 
 type Matrix struct {
-	data [][]float64
+	Data [][]float64
+}
+
+func NewMatrix(data [][]float64) Matrix {
+	return Matrix{Data: data}
 }
 
 func (m *Matrix) Transpose() {
-	m.data = TransposeMatrix(m.data)
+	m.Data = TransposeMatrix(m.Data)
 }
 
 func (m *Matrix) Center() {
-	m.data = CenterMatrix(*m).data
+	m.Data = CenterMatrix(*m).Data
 }
 
 // ReadCSVToMatrixFromFile reads a CSV file and returns a Matrix struct
@@ -1710,11 +1714,11 @@ func ReadCSVToMatrixFromFile(filePath string, skipHeader bool) Matrix {
 	}
 	defer file.Close()
 
-	return ReadCSVToMatrix(file, skipHeader)
+	return NewMatrixFromReader(file, skipHeader)
 }
 
-// ReadCSVToMatrix reads CSV data from an io.Reader and returns a Matrix struct
-func ReadCSVToMatrix(reader io.Reader, skipHeader bool) Matrix {
+// NewMatrixFromReader reads CSV data from an io.Reader and returns a Matrix struct
+func NewMatrixFromReader(reader io.Reader, skipHeader bool) Matrix {
 	csvreader := csv.NewReader(reader)
 	records, err := csvreader.ReadAll()
 	if err != nil {
@@ -1736,43 +1740,43 @@ func ReadCSVToMatrix(reader io.Reader, skipHeader bool) Matrix {
 		}
 	}
 
-	return Matrix{data: matrixData}
+	return Matrix{Data: matrixData}
 }
 
 // GetCovarianceMatrix returns the covariance matrix of the given matrix
 // it centers the matrix and then calculates the covariance matrix using the formula:
 // cov(X) = (X^T * X) / n-1
 func (m Matrix) GetCovarianceMatrix() Matrix {
-	if len(m.data) == 0 {
-		return Matrix{data: [][]float64{}}
+	if len(m.Data) == 0 {
+		return Matrix{Data: [][]float64{}}
 	}
 
-	if len(m.data[0]) == 0 {
-		return Matrix{data: [][]float64{}}
+	if len(m.Data[0]) == 0 {
+		return Matrix{Data: [][]float64{}}
 	}
 
 	centered := CenterMatrix(m)
-	n := float64(len(centered.data))
-	covData := MultiplyMatrices(TransposeMatrix(centered.data), centered.data)
+	n := float64(len(centered.Data))
+	covData := MultiplyMatrices(TransposeMatrix(centered.Data), centered.Data)
 	for i := range covData {
 		for j := range covData[i] {
 			covData[i][j] /= (n - 1)
 		}
 	}
 
-	return Matrix{data: covData}
+	return Matrix{Data: covData}
 }
 
 func CenterMatrix(m Matrix) Matrix {
-	if len(m.data) == 0 {
+	if len(m.Data) == 0 {
 		return m
 	}
 
-	if len(m.data[0]) == 0 {
+	if len(m.Data[0]) == 0 {
 		return m
 	}
 
-	centeredData := CopyMatrix(m.data)
+	centeredData := CopyMatrix(m.Data)
 	for col := range centeredData[0] {
 		var sum float64
 		for row := range centeredData {
@@ -1784,57 +1788,57 @@ func CenterMatrix(m Matrix) Matrix {
 		}
 	}
 
-	return Matrix{data: centeredData}
+	return Matrix{Data: centeredData}
 }
 
 func (m *Matrix) SetIndex(i, j int, value float64) {
-	if i < 0 || i >= len(m.data) || j < 0 || j >= len(m.data[0]) {
+	if i < 0 || i >= len(m.Data) || j < 0 || j >= len(m.Data[0]) {
 		panic("index out of bounds")
 	}
 
-	m.data[i][j] = value
+	m.Data[i][j] = value
 }
 
 func (m *Matrix) Copy() *Matrix {
-	newmatrix := &Matrix{data: CopyMatrix(m.data)}
+	newmatrix := &Matrix{Data: CopyMatrix(m.Data)}
 	return newmatrix
 }
 
 func (m *Matrix) MultiplyMatrix(matrixB *Matrix) Matrix {
-	res := MultiplyMatrices(m.data, matrixB.data)
-	return Matrix{data: res}
+	res := MultiplyMatrices(m.Data, matrixB.Data)
+	return Matrix{Data: res}
 }
 
 func (m *Matrix) GetColumn(columnIndex int) []float64 {
-	if len(m.data) == 0 {
+	if len(m.Data) == 0 {
 		return []float64{}
 	}
-	column := make([]float64, len(m.data))
-	for i := range m.data {
-		column[i] = m.data[i][columnIndex]
+	column := make([]float64, len(m.Data))
+	for i := range m.Data {
+		column[i] = m.Data[i][columnIndex]
 	}
 	return column
 }
 
 func (m *Matrix) Append(other Matrix) Matrix {
-	if len(m.data) == 0 {
+	if len(m.Data) == 0 {
 		return other
 	}
-	if len(other.data) == 0 {
+	if len(other.Data) == 0 {
 		return *m
 	}
-	appendedData := make([][]float64, len(m.data))
-	for i := range m.data {
-		appendedData[i] = append(m.data[i], other.data[i]...)
+	appendedData := make([][]float64, len(m.Data))
+	for i := range m.Data {
+		appendedData[i] = append(m.Data[i], other.Data[i]...)
 	}
-	return Matrix{data: appendedData}
+	return Matrix{Data: appendedData}
 }
 
 func (m *Matrix) GetRow(rowIndex int) []float64 {
-	if len(m.data) == 0 {
+	if len(m.Data) == 0 {
 		return []float64{}
 	}
-	return m.data[rowIndex]
+	return m.Data[rowIndex]
 }
 
 // validateEigenDecomposition will validate if
@@ -1843,10 +1847,10 @@ func (m *Matrix) GetRow(rowIndex int) []float64 {
 func validateEigenDecomposition(matrix Matrix, eigenvalue float64, eigenvector []complex128) bool {
 	realEigen := complexToRealVector(eigenvector)
 
-	realEigenMatrix := Matrix{data: [][]float64{realEigen}}
+	realEigenMatrix := Matrix{Data: [][]float64{realEigen}}
 	realEigenMatrix.Transpose()
 	// A * v
-	Av := MultiplyMatrices(matrix.data, realEigenMatrix.data)
+	Av := MultiplyMatrices(matrix.Data, realEigenMatrix.Data)
 	// lambda * v
 	lambdaV := MultiplyVectorByScalar(realEigenMatrix.GetColumn(0), eigenvalue)
 	lambdaVRes := TransposeMatrix([][]float64{lambdaV})
@@ -1863,8 +1867,8 @@ type SVDResult struct {
 // It returns matrices U, S, and V such that A = U * S * V^T
 func SVD(m *Matrix) SVDResult {
 	// compute AtA to find eigenvalues, we need a square matrix
-	At := TransposeMatrix(m.data)
-	AtA := MultiplyMatrices(At, m.data)
+	At := TransposeMatrix(m.Data)
+	AtA := MultiplyMatrices(At, m.Data)
 	eigenValues := GetEigenvalues(AtA)
 	// build singular values from eigenvalues of AtA
 	singularValues := make([]float64, len(eigenValues))
@@ -1913,13 +1917,13 @@ func SVD(m *Matrix) SVDResult {
 		}
 	}
 
-	AV := MultiplyMatrices(m.data, V)
+	AV := MultiplyMatrices(m.Data, V)
 	U := MultiplyMatrices(AV, SInv)
 
 	svd := SVDResult{
-		U: Matrix{data: U},
-		S: Matrix{data: Dmatrix},
-		V: Matrix{data: V},
+		U: Matrix{Data: U},
+		S: Matrix{Data: Dmatrix},
+		V: Matrix{Data: V},
 	}
 
 	return svd
@@ -1995,19 +1999,19 @@ func PCA(m Matrix) []PrincipalComponent {
 		Value  float64
 		Vector []float64
 	}
-	eigenPairs := make([]EigenPair, 0, len(svd.S.data))
-	nSamples := float64(len(centeredMatrix.data))
+	eigenPairs := make([]EigenPair, 0, len(svd.S.Data))
+	nSamples := float64(len(centeredMatrix.Data))
 
 	// here we convert the singular values to variances by squaring them and dividing by n-1
 	// we do this because the singular values are the square roots of the eigenvalues of
 	//  the covariance matrix,
-	for i := range svd.S.data {
-		sigma := svd.S.data[i][i]
+	for i := range svd.S.Data {
+		sigma := svd.S.Data[i][i]
 		variance := (sigma * sigma) / (nSamples - 1)
 
 		ep := EigenPair{
 			Value:  variance,
-			Vector: svd.V.data[i],
+			Vector: svd.V.Data[i],
 		}
 		eigenPairs = append(eigenPairs, ep)
 	}
