@@ -6374,3 +6374,58 @@ func TestInverseIterationWithStart(t *testing.T) {
 		})
 	}
 }
+
+func TestMatrix_ToString(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for receiver constructor.
+		data [][]float64
+		want string
+	}{
+		{
+			name: "empty matrix",
+			data: [][]float64{},
+			want: "[]",
+		},
+		{
+			name: "1x1 matrix",
+			data: [][]float64{{42}},
+			want: "+----+\n| 42 |\n+----+",
+		},
+		{
+			name: "2x2 matrix",
+			data: [][]float64{
+				{1, 2},
+				{3, 4},
+			},
+			want: "+---+---+\n| 1 | 2 |\n+---+---+\n| 3 | 4 |\n+---+---+",
+		},
+		{
+			name: "3x3 matrix",
+			data: [][]float64{
+				{1, 2, 3},
+				{4, 5, 6},
+				{7, 8, 9},
+			},
+			want: "+---+---+---+\n| 1 | 2 | 3 |\n+---+---+---+\n| 4 | 5 | 6 |\n+---+---+---+\n| 7 | 8 | 9 |\n+---+---+---+",
+		},
+		{
+			name: "non-square matrix",
+			data: [][]float64{
+				{1, 2, 3},
+				{4, 5, 6},
+			},
+			want: "+---+---+---+\n| 1 | 2 | 3 |\n+---+---+---+\n| 4 | 5 | 6 |\n+---+---+---+",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := NewMatrix(tt.data)
+			got := m.ToString()
+			fmt.Println(got)
+			if got != tt.want {
+				t.Errorf("Matrix.ToString() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

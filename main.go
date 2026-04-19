@@ -10,6 +10,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 // TODO
@@ -1690,6 +1691,39 @@ func complexToRealVector(vector []complex128) []float64 {
 
 type Matrix struct {
 	Data [][]float64
+}
+
+func (m Matrix) ToString() string {
+	if len(m.Data) == 0 {
+		return "[]"
+	}
+	cols := len(m.Data[0])
+	cells := make([][]string, len(m.Data))
+	colWidths := make([]int, cols)
+	for i, row := range m.Data {
+		cells[i] = make([]string, cols)
+		for j, v := range row {
+			s := strconv.FormatFloat(v, 'g', -1, 64)
+			cells[i][j] = s
+			if len(s) > colWidths[j] {
+				colWidths[j] = len(s)
+			}
+		}
+	}
+	sep := "+"
+	for _, w := range colWidths {
+		sep += strings.Repeat("-", w+2) + "+"
+	}
+	var sb strings.Builder
+	for _, row := range cells {
+		sb.WriteString(sep + "\n|")
+		for j, cell := range row {
+			sb.WriteString(fmt.Sprintf(" %-*s |", colWidths[j], cell))
+		}
+		sb.WriteString("\n")
+	}
+	sb.WriteString(sep)
+	return sb.String()
 }
 
 func NewMatrix(data [][]float64) Matrix {
