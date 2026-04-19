@@ -1693,7 +1693,7 @@ type Matrix struct {
 	Data [][]float64
 }
 
-func (m Matrix) ToString() string {
+func (m Matrix) ToString(decimals int) string {
 	if len(m.Data) == 0 {
 		return "[]"
 	}
@@ -1703,7 +1703,7 @@ func (m Matrix) ToString() string {
 	for i, row := range m.Data {
 		cells[i] = make([]string, cols)
 		for j, v := range row {
-			s := strconv.FormatFloat(v, 'g', -1, 64)
+			s := strconv.FormatFloat(v, 'f', decimals, 64)
 			cells[i][j] = s
 			if len(s) > colWidths[j] {
 				colWidths[j] = len(s)

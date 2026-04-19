@@ -6421,7 +6421,7 @@ func TestMatrix_ToString(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := NewMatrix(tt.data)
-			got := m.ToString()
+			got := m.ToString(0)
 			fmt.Println(got)
 			if got != tt.want {
 				t.Errorf("Matrix.ToString() = %q, want %q", got, tt.want)
